@@ -6,5 +6,4 @@ compatibility_flags = ["nodejs_compat"]
 # --- KV: tokens + markdown knowledge docs ---
 [[kv_namespaces]]
 binding = "KV"
-id = "placeholder_kv_namespace_id"
-# 배포 전에 `wrangler kv namespace create KV`로 실제 id로 교체
+id = "0a0b05a722ff4e4ebb8e585ed9a489a4"

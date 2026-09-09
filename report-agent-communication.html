@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에이전트 간 통신(Agent-to-Agent) 기술·표준 동향 보고서</title>
+<style>
+/* ===== DESIGN.md 토큰 ===== */
+:root{
+  --primary:#4F46E5; --primary-hover:#4338CA; --primary-focus:#7C6DF2;
+  --ink:#1F2937; --ink-muted:#6B7280; --ink-subtle:#9CA3AF;
+  --canvas:#FFFFFF; --surface-1:#F9FAFB; --surface-2:#F3F4F6; --hairline:#E5E7EB;
+  --on-primary:#FFFFFF; --success:#10B981; --overlay:#EEF2FF;
+  --radius-md:12px; --radius-lg:16px; --radius-pill:9999px;
+  --space-xs:8px; --space-sm:12px; --space-md:16px; --space-lg:24px;
+  --space-xl:32px; --space-xxl:48px; --space-section:72px;
+  --font-sans:'Inter',system-ui,sans-serif;
+  --font-mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);color:var(--ink);background:var(--canvas);line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased}
+
+/* Layout */
+.container{max-width:1080px;margin:0 auto;padding:var(--space-lg) var(--space-md)}
+section{padding:var(--space-section) 0}
+
+/* Top nav */
+.top-nav{width:100%;background:var(--canvas);border-bottom:1px solid var(--hairline);position:sticky;top:0;z-index:10;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 var(--space-lg)}
+.brand{font-weight:700;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.brand-dot{width:10px;height:10px;border-radius:var(--radius-pill);background:var(--primary)}
+.nav-links{display:flex;gap:var(--space-md);font-size:13.5px}
+.nav-links a{color:var(--ink-muted);text-decoration:none;font-weight:500}
+.nav-links a:hover{color:var(--primary)}
+
+/* Typography */
+h1{font-size:40px;font-weight:700;line-height:1.15;letter-spacing:-1px}
+h2{font-size:32px;font-weight:700;line-height:1.2;letter-spacing:-0.5px;margin-bottom:var(--space-md)}
+h3{font-size:20px;font-weight:600;line-height:1.3;letter-spacing:-0.1px}
+.lead{font-size:17px;line-height:1.6;color:var(--ink-muted)}
+.eyebrow{font-size:12.5px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--primary)}
+p{font-size:15px;line-height:1.6;color:var(--ink)}
+strong{color:var(--ink);font-weight:600}
+a{color:var(--primary);text-decoration:none}
+a:hover{color:var(--primary-hover);text-decoration:underline}
+code{font-family:var(--font-mono);font-size:13px;background:var(--surface-2);padding:1px 6px;border-radius:4px;color:var(--ink-muted)}
+.mono{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted)}
+
+/* Hero */
+.hero{background:var(--canvas);padding:var(--space-xxl) 0;border-bottom:1px solid var(--hairline)}
+.hero .container{display:flex;flex-direction:column;gap:var(--space-md)}
+.tag{border:1px solid var(--primary);color:var(--primary);background:transparent;border-radius:var(--radius-pill);padding:2px 12px;font-size:12px;font-weight:600;display:inline-block}
+.meta-line{font-size:13.5px;color:var(--ink-muted);display:flex;gap:var(--space-md);flex-wrap:wrap}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-lg);margin-top:var(--space-xl)}
+.kpi{background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--radius-lg);padding:var(--space-lg)}
+.kpi b{display:block;font-size:28px;font-weight:700;color:var(--ink);line-height:1.1}
+.kpi span{font-size:13px;color:var(--ink-muted)}
+
+/* Section header with anchor */
+.section-head{display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-md)}
+.section-head .eyebrow{margin-bottom:2px}
+.section-lead{color:var(--ink-muted);max-width:760px;margin-bottom:var(--space-lg)}
+
+/* Cards */
+.card{background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--radius-lg);padding:var(--space-lg)}
+.card h3{margin-bottom:var(--space-sm)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-lg)}
+.card-grid .card{padding:var(--space-lg)}
+ul{list-style:none;padding:0}
+ul li{position:relative;padding-left:20px;margin-bottom:8px;font-size:14.5px;line-height:1.55;color:var(--ink)}
+ul li::before{content:"";position:absolute;left:0;top:0.55em;width:8px;height:8px;border-radius:2px;background:var(--primary)}
+ul.clean li::before{display:none;padding-left:0}
+
+/* Table */
+.table-wrap{overflow-x:auto;background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--radius-lg)}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface-1)}
+thead th{background:var(--surface-1);color:var(--ink-muted);font-weight:600;font-size:13px;text-align:left;padding:12px 14px;border-bottom:2px solid var(--hairline)}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--hairline);vertical-align:top;color:var(--ink)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-2)}
+td:first-child{font-weight:500}
+.badge{display:inline-block;background:var(--overlay);color:var(--primary);font-size:12px;font-weight:600;border-radius:var(--radius-pill);padding:2px 10px;margin-right:4px}
+.badge-success{background:rgba(16,185,129,0.12);color:var(--success)}
+.badge-muted{background:var(--surface-2);color:var(--ink-muted)}
+
+/* Callout / highlight box */
+.callout{background:var(--overlay);border-left:3px solid var(--primary);border-radius:var(--radius-md);padding:var(--space-md) var(--space-lg);color:var(--ink);font-size:14.5px;line-height:1.6}
+.callout b{color:var(--primary)}
+
+/* Code block */
+pre{background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--radius-md);padding:var(--space-md) var(--space-lg);overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.55;color:var(--ink-muted)}
+pre .c{color:var(--ink-subtle)} /* comment */
+
+/* Timeline / roadmap */
+.timeline{list-style:none;padding:0}
+.timeline li{position:relative;padding-left:28px;margin-bottom:var(--space-md);font-size:14.5px;line-height:1.55;color:var(--ink)}
+.timeline li::before{content:"";position:absolute;left:6px;top:0.5em;width:10px;height:10px;border-radius:50%;background:var(--primary);border:2px solid #fff}
+.timeline li b{color:var(--ink)}
+
+/* Footer */
+footer{background:var(--surface-1);border-top:1px solid var(--hairline);padding:var(--space-lg) var(--space-md)}
+footer .container{font-size:13px;color:var(--ink-subtle)}
+footer .src{margin-top:var(--space-sm);font-size:12.5px;color:var(--ink-subtle)}
+
+/* Responsive */
+@media (max-width:1024px){
+  .card-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .kpi-row{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+}
+@media (max-width:768px){
+  .container{padding:var(--space-md) var(--space-sm)}
+  section{padding:var(--space-xxl) 0}
+  h1{font-size:30px}
+  h2{font-size:26px}
+  .top-nav .nav-links{display:none}
+  .card-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+@media print{
+  .top-nav{display:none}
+  section{padding:24px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Top Nav ===== -->
+<nav class="top-nav">
+  <div class="brand"><span class="brand-dot"></span>Agent Interop Report</div>
+  <div class="nav-links">
+    <a href="#summary">요약</a>
+    <a href="#standards">주요 표준</a>
+    <a href="#compare">비교표</a>
+    <a href="#trends">동향</a>
+    <a href="#roadmap">로드맵</a>
+    <a href="#sources">출처</a>
+  </div>
+</nav>
+
+<!-- ===== Hero ===== -->
+<div class="hero">
+  <div class="container">
+    <span class="tag">기술 조사 보고서 · 2026-09</span>
+    <h1>에이전트 간 통신<br>(Agent-to-Agent) 표준·기술 동향</h1>
+    <p class="lead">서로 다른 사용자·프레임워크·벤더의 AI 에이전트가 안전하게 협업하는 방법. 에이전트 간 통신 표준(A2A, ANP, ACP, MCP, AGNTCY/SLIM)의 현황과 생태계 동향, 그리고 실무 적용 방안을 정리한다.</p>
+    <div class="meta-line">
+      <span><code>조사 기준일</code> 2026-09-09</span>
+      <span><code>주요 출처</code> 공식 표준 문서·GitHub·프로토콜 사이트</span>
+      <span><code>목적</code> 제출용 기술 동향 보고</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Summary ===== -->
+<section id="summary">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Executive Summary</span></div>
+    <h2>한눈에 보는 요약</h2>
+    <p class="section-lead">2026년 현재 에이전트 간 통신은 "표준화가 본격화"되는 단계다. 전송 수준 보안 메시징(SLIM), 에이전트 간 협업(A2A), 웹 기반 P2P 네트워크(ANP), 도구 연결(MCP)이 각자 역할을 명확히 하며 상호보완적으로 성장하고 있다.</p>
+
+    <div class="kpi-row">
+      <div class="kpi"><b>5종</b><span>주요 A2A 통신 표준·프로토콜</span></div>
+      <div class="kpi"><b>100+</b><span>A2A 공식·커뮤니티 파트너 (AWS, IBM, Adobe, LangChain 등)</span></div>
+      <div class="kpi"><b>6+</b><span>A2A 공식 SDK 언어 (Python·Go·Java·JS·.NET·Rust)</span></div>
+      <div class="kpi"><b>조직</b><span>Agentic AI Foundation (A2A 합류), LF Projects (AGNTCY)</span></div>
+    </div>
+
+    <div style="margin-top:var(--space-xl)">
+      <div class="card">
+        <h3>핵심 결론 3가지</h3>
+        <ul>
+          <li><strong>두 계층으로 나뉜다</strong> — "메시지를 어떻게 주고받을지"(전송: SLIM, ANP)와 "무슨 의미의 협업인지"(의미: A2A 태스크/메시지)가 분리되어 상호보완적으로 발전 중.</li>
+          <li><strong>폴링은 여전히 기본이되, 표준이 push·SSE를 함께 정의</strong> — 오프라인·단절 시나리오까지 포함한 수신 메커니즘(폴링/스트리밍/푸시 알림)이 각 스펙에 명시됨.</li>
+          <li><strong>표준화 기구·거버넌스가 자리잡는 중</strong> — A2A는 2026-08-27부로 Agentic AI Foundation으로 이관, AGNTCY는 LF Projects 산하, ANP는 독립 오픈소스 커뮤니티로 운영.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Standards ===== -->
+<section id="standards">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Landscape</span></div>
+    <h2>주요 표준·프로토콜 개요</h2>
+    <p class="section-lead">에이전트 간 통신을 다루는 표준은 크게 5가지 축으로 정리된다. 각자의 목적·담당 계층·성숙도를 확인한다.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>A2A (Agent2Agent)</h3>
+        <p class="mono">소유: Agentic AI Foundation (2026.8 합류)</p>
+        <p style="margin-top:8px">에이전트↔에이전트 협업·상호운용을 위한 공개 표준. Task/Message/Artifact 모델과 Agent Card(발견·능력·인증)를 정의. 폴링·SSE·푸시 알림 3가지 수신 방식 명시.</p>
+        <div><span class="badge-success">성숙: v1.0</span><span class="badge">표준화 진행 중</span></div>
+      </div>
+      <div class="card">
+        <h3>ANP (Agent Network Protocol)</h3>
+        <p class="mono">소유: agent-network-protocol (오픈소스)</p>
+        <p style="margin-top:8px">"에이전트 인터넷의 HTTP" 지향. <b>연합(federated)·DID 기반</b> P2P 에이전트 네트워크. Agent DID, 발견, E2E 인스턴트 메시징(직접/그룹), 결제 프로토콜(AP2) 포함.</p>
+        <div><span class="badge-success">성숙: v1.1</span><span class="badge-muted">메타프로토콜 draft</span></div>
+      </div>
+      <div class="card">
+        <h3>ACP (Agent Client Protocol)</h3>
+        <p class="mono">소유: CADE / agentclientprotocol</p>
+        <p style="margin-top:8px"><b>코드 에디터 ↔ 코딩 에이전트</b> 연결 표준. 같은 머신(호스트) 내 클라이언트-에이전트 통신에 초점. JSON-RPC 기반, 상태 있는 세션.</p>
+        <div><span class="badge-success">안정: protocol v1</span><span class="badge">IDE 도구</span></div>
+      </div>
+      <div class="card">
+        <h3>MCP (Model Context Protocol)</h3>
+        <p class="mono">소유: 모델 컨텍스트 커뮤니티</p>
+        <p style="margin-top:8px">에이전트↔도구·데이터·리소스 연결 표준. A2A와 상호보완적 ("도구는 MCP로, 동료 에이전트는 A2A로"). Claude·ChatGPT·VS Code 등 광범위 채택.</p>
+        <div><span class="badge-success">광범위 채택</span><span class="badge">도구 연결</span></div>
+      </div>
+      <div class="card">
+        <h3>AGNTCY / SLIM</h3>
+        <p class="mono">소유: LF Projects 산하 AGNTCY</p>
+        <p style="margin-top:8px">에이전트 네트워크 <b>전송 인프라</b>. SLIM은 보안·저지연 메시징으로 그룹(방)·pub/sub·<b>MLS 종단간 암호화</b> 제공. OASF·Identity·Directory·SHADI로 확장.</p>
+        <div><span class="badge">IETF 표준화</span></div>
+      </div>
+      <div class="card">
+        <h3>OASF / Identity / Directory</h3>
+        <p class="mono">소유: AGNTCY</p>
+        <p style="margin-top:8px">에이전트의 스키마(OASF)·탈중앙 신원(Identity)·페더레이션 발견(Directory). 에이전트 생태계의 "디렉토리·ID" 계층.</p>
+        <div><span class="badge-muted">인프라 계층</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Comparison ===== -->
+<section id="compare">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Comparison</span></div>
+    <h2>표준 상세 비교</h2>
+    <p class="section-lead">5개 표준을 목적·신원·메시징·발견·성숙도 측면에서 가로 비교한다.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>기준</th><th>A2A</th><th>ANP</th><th>ACP</th><th>MCP</th><th>AGNTCY/SLIM</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>목적</td><td>에이전트↔에이전트 협업</td><td>에이전트 P2P 네트워크</td><td>에디터↔코딩 에이전트</td><td>에이전트↔도구</td><td>에이전트 메시징 전송 인프라</td></tr>
+          <tr><td>모델</td><td>Task/Message/Artifact</td><td>DID + JSON-RPC</td><td>JSON-RPC + 상태 세션</td><td>JSON-RPC (도구/리소스)</td><td>채널/그룹 + pub/sub</td></tr>
+          <tr><td>신원</td><td>Agent Card (스키마)</td><td>did:wba (W3C DID)</td><td>호스트 내 세션</td><td>도구·서버 인증</td><td>AGNTCY Identity</td></tr>
+          <tr><td>발견</td><td>well-known/registry/private</td><td>.well-known + 에이전트 검색</td><td>— (로컬)</td><td>— (도구 레지스트리)</td><td>Agent Directory (페더레이션)</td></tr>
+          <tr><td>E2E 암호화</td><td>지원 (전송·인증)</td><td>MLS 계열 E2EE (메시징)</td><td>—</td><td>—</td><td>MLS (그룹 E2EE)</td></tr>
+          <tr><td>그룹(방)</td><td>멀티턴 협업 (Task 기반)</td><td>그룹 메시징 (group.* 오퍼)</td><td>—</td><td>—</td><td>그룹 채널 + 멤버십 관리</td></tr>
+          <tr><td>수신 메커니즘</td><td>폴링 / SSE / 푸시</td><td>직접·그룹 메시지 + 페더레이션</td><td>요청/응답 + 통지</td><td>요청/응답</td><td>pub/sub·스트리밍</td></tr>
+          <tr><td>성숙도</td><td>v1.0 공개</td><td>v1.1 공개</td><td>protocol v1 안정</td><td>광범위 채택</td><td>IETF 드래프트</td></tr>
+          <tr><td>거버넌스</td><td>Agentic AI Foundation</td><td>오픈소스 커뮤니티</td><td>CADE</td><td>커뮤니티 (Anthropic 기원)</td><td>LF Projects</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:var(--space-xl)">
+      <div class="callout">
+        <b>핵심 인사이트:</b> A2A와 ANP는 둘 다 "에이전트 간 통신"을 목표하지만 <strong>설계 철학이 다르다</strong> — A2A는 HTTP 엔드포인트 기반의 게이트웨이형(중앙 허브·엔드포인트 노출), ANP는 이메일·비트코인처럼 <strong>연합형 P2P(분산 신원 + 도메인 간 라우팅)</strong>. SLIM은 양쪽 아래에서 전송·암호화를 맡을 수 있는 인프라 계층이다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Detail A2A/ANP ===== -->
+<section id="detail">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Deep Dive</span></div>
+    <h2>A2A와 ANP 깊게 보기</h2>
+    <p class="section-lead">"숨겨진 메신저방(그룹 협업 방)" 관점에서 가장 관련 깊은 두 표준을 심층 분석한다.</p>
+
+    <div style="margin-bottom:var(--space-lg);padding:var(--space-lg)">
+      <div class="card">
+        <h3>A2A — 협업·작업 오케스트레이션</h3>
+        <ul>
+          <li><b>에이전트 카드(Agent Card)</b>: 신원·능력·스킬·인증 방식의 JSON 메타데이터. 상대방이 "어떻게 대화할지"를 아는 진입점.</li>
+          <li><b>Task / Message / Artifact</b>: 상태 있는 작업 단위, 턴 기반 대화, 파일·구조화 산출물. 멀티턴·병렬 팔로업·산출물 참조 지원.</li>
+          <li><b>발견 3전략</b>: well-known URI / 큐레이션 레지스트리 / <b>직접 설정·사설 발견(초대·URL)</b> — "숨겨진 방"은 3번째 전략에 해당.</li>
+          <li><b>수신 메커니즘</b>: Request/Response(폴링) · SSE 스트리밍 · <b>Push 알림(웹훅)</b>으로 연결 끊김·장기작업 대응.</li>
+          <li><b>보안</b>: API Key·HTTP Auth·OAuth2·OIDC·상호 TLS 인증 스킴을 스펙에 포함. in-task 인가(사람 승인 게이트) 지원.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>ANP — 연합형 P2P 네트워크</h3>
+        <ul>
+          <li><b>"에이전트 인터넷의 HTTP"</b>: 플랫폼 중심이 아닌 프로토콜 중심의 직접 연결 지향.</li>
+          <li><b>DID 기반 신원</b>: <code>did:wba</code> 메서드, WNS 핸들(<code>alice.example.com</code>)로 해석, 키 로테이션 지원.</li>
+          <li><b>인스턴트 메시징 9개 프로파일</b>: 직접/그룹 메시징, E2EE(MLS), 첨부·대용량 객체, 페더레이션, 멘션·셀렉터 분리.</li>
+          <li><b>그룹 거버넌스</b>: <code>group.create/invite/accept/join/add/remove/leave</code> 등 명시적 제어 평면.</li>
+          <li><b>제어/데이터 평면 분리</b>: 메시지에 manifest만 싣고 객체는 별도 HTTP(S) 채널로 전송.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>SLIM — 전송·암호화 인프라</h3>
+        <ul>
+          <li><b>그룹(방) 기본 제공</b>: 중재자(Moderator) 모델로 멤버 초대·제거. <code>create-channel / add-participant</code>.</li>
+          <li><b>MLS 종단간 암호화</b>: 그룹 메시지에 대한 E2E 보안. 세션 상태 영속화로 오프라인·재접속 처리.</li>
+          <li><b>pub/sub·스트리밍</b>: 다수 에이전트 구독에 유리. 데이터 플레인·컨트롤러·채널 매니저로 구성.</li>
+          <li><b>표준화</b>: IETF 드래프트 <code>draft-mpsb-agntcy-slim</code> 진행 중.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Trends ===== -->
+<section id="trends">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Trends</span></div>
+    <h2>생태계 동향 5가지</h2>
+    <p class="section-lead">표준 문서·기구 발표에서 관찰되는 최신 흐름을 정리한다.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>① A2A, 범(凡)재단으로 공식 이관</h3>
+        <p>2026-08-27, A2A가 <b>Agentic AI Foundation</b>에 합류. 벤더 중립적 거버넌스 확립. AWS·IBM·Adobe·Intuit·Kakao·LG CNS 등 100여 개 파트너가 참여.</p>
+      </div>
+      <div class="card">
+        <h3>② v1.0으로 성숙</h3>
+        <p>A2A v1.0 스펙 공개로 명확성·구조 개선. SDK 공식 6개 언어 + 커뮤니티(Rust·Swift·Elixir·C++)까지 확장. 커뮤니티 주도 표준화 강조.</p>
+      </div>
+      <div class="card">
+        <h3>③ MCP의 광범위 채택</h3>
+        <p>도구 연결 표준으로서 사실상 표준 위치. A2A는 "Build with ADK, equip with MCP, communicate with A2A"로 <b>MCP와 상호보완</b>을 공식화.</p>
+      </div>
+      <div class="card">
+        <h3>④ "인터넷 오브 에이전트(IoA)" 인프라 성숙</h3>
+        <p>AGNTCY(SLIM·OASF·Identity·Directory·SHADI)가 LF Projects 산하에서 발견·신원·암호화·관측 인프라를 통합 제공.</p>
+      </div>
+      <div class="card">
+        <h3>⑤ 연합형 P2P 지향</h3>
+        <p>ANP처럼 이메일·비트코인에 빗댄 <b>분산형·연합형</b> 접근이 등장. 중앙 허브 없이 도메인 간 직접 통신·결제(AP2)·DID 신원까지 포함하는 비전.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Roadmap ===== -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Recommendation</span></div>
+    <h2>적용 방안·로드맵</h2>
+    <p class="section-lead">"서로 다른 사람의 에이전트가 협업하는 숨겨진 메신저방" 구축 시나리오 기준으로 권장 조합을 제시한다.</p>
+
+    <div style="margin-bottom:var(--space-xl)">
+      <div class="callout">
+        <b>권장 조합: 전송은 SLIM(혹은 ANP), 의미는 A2A.</b> "방(채널·멤버십·E2E 암호화)"은 전송 계층에서, "무엇을 요청하고 무슨 결과를 주고받는지"(Task·Message·Artifact)는 A2A에서 처리한다. 사람 승인 게이트는 A2A의 in-task 인가를 활용한다.
+      </div>
+    </div>
+
+    <div style="margin-bottom:var(--space-xl)">
+      <h3>공통 아키텍처</h3>
+      <pre><span class="c"># 개별 PC 에이전트 ↔ (전송 계층) ↔ 허브 ↔ (전송 계층) ↔ 개별 PC 에이전트</span>
+사용자 A PC ── 에이전트 A (A2A 클라이언트 + SLIM 노드)
+        │                         ▲
+        ▼                         │
+허브·방 서버 (SLIM Channel Manager + A2A 게이트웨이 + MLS 암호화)
+        ▲                         │
+        │                         ▼
+사용자 B PC ── 에이전트 B (A2A 클라이언트 + SLIM 노드)
+
+<span class="c"># 수신: 상시 구동 → SSE/pub-sub, 비상시 → 폴링 + A2A push(웹훅)</span></pre>
+    </div>
+
+    <h3>3단계 로드맵</h3>
+    <ol class="timeline" style="margin-top:var(--space-md)">
+      <li><b>Phase 1 — PoC (상호운용 검증)</b>: A2A SDK로 에이전트 카드 발급 + Task 왕복. 허브 1대로 폴링/SSE 동작 확인.</li>
+      <li><b>Phase 2 — 방 기능 (숨겨진 방)</b>: SLIM 그룹 채널(create-channel · add-participant)로 초대·멤버십·MLS E2E 암호화. 오프라인·재접속 처리.</li>
+      <li><b>Phase 3 — 신원·관측·규모화</b>: AGNTCY Identity·Directory·Observability(Eval) 접목. 승인 게이트·감사·발견·성능 평가 추가. 필요 시 ANP 페더레이션으로 확장.</li>
+    </ol>
+
+    <div style="margin-top:var(--space-xl);overflow-x:auto;background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--radius-lg)">
+      <table>
+        <thead><tr><th>단계</th><th>주요 작업</th><th>산출물</th><th>활용 표준</th></tr></thead>
+        <tbody>
+          <tr><td>Phase 1</td><td>에이전트 카드·Task 통신, 허브 PoC</td><td>상호운용성 검증 리포트</td><td>A2A SDK</td></tr>
+          <tr><td>Phase 2</td><td>그룹 채널·멤버십·E2EE, 오프라인 처리</td><td>숨겨진 방 (초대·암호화)</td><td>SLIM · A2A</td></tr>
+          <tr><td>Phase 3</td><td>DID 신원·발견·관측, 승인 게이트</td><td>운영 인프라·감사</td><td>AGNTCY Identity/Directory</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Sources ===== -->
+<section id="sources">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Sources</span></div>
+    <h2>출처 및 참고 자료</h2>
+    <p class="section-lead">본 보고서는 아래 공식 표준 문서·프로토콜 사이트·GitHub 저장소를 기준으로 작성했다.</p>
+
+    <div style="margin-bottom:var(--space-lg)">
+      <div class="card">
+        <h3>A2A / MCP / AGNTCY</h3>
+        <ul class="clean" style="margin-top:8px;padding-left:0">
+          <li><code>a2a-protocol.org</code> — A2A 공식 문서·v1.0 스펙·로드맵·파트너 (Agentic AI Foundation 합류 발표 포함)</li>
+          <li><code>modelcontextprotocol.io</code> — MCP 공식 문서</li>
+          <li><code>agntcy.org</code> / <code>docs.agntcy.org</code> / <code>slim.agntcy.org</code> — AGNTCY 스택·SLIM</li>
+        </ul>
+      </div>
+    </div>
+    <div style="margin-bottom:var(--space-lg)">
+      <div class="card">
+        <h3>ANP / ACP</h3>
+        <ul class="clean" style="margin-top:8px;padding-left:0">
+          <li><code>github.com/agent-network-protocol/AgentNetworkProtocol</code> — ANP README·스펙 (v1.1)</li>
+          <li><code>github.com/agentclientprotocol/agent-client-protocol</code> — ACP 공식 저장소 (protocol v1)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="callout">
+        <b>유의:</b> 본 보고서의 "숨겨진 방" 시나리오와 3단계 로드맵은 위 표준 문서를 바탕으로 한 <strong>권장안(제안)</strong>이며, 특정 제품의 공식 기능 보증이 아닙니다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div style="font-weight:600;color:var(--ink)">에이전트 간 통신(Agent-to-Agent) 기술·표준 동향 보고서</div>
+    <div style="margin-top:8px">작성일: 2026-09-09 · 공식 표준 문서 및 GitHub 저장소 기반 조사 · 제출용</div>
+  </div>
+</footer>
+
+</body>
+</html>

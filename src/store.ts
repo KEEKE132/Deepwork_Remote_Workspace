@@ -2,6 +2,8 @@ import type { Env } from "./env";
 
 /** KV 키: tokens/<sha256> -> <유저 레이블 JSON> */
 const TOKEN_PREFIX = "tokens:";
+/** KV 키: tokens/<sha256>:lastUsed -> ISO8601 접속 시각 (레코드 본체와 분리) */
+const LAST_USED_SUFFIX = ":lastUsed";
 /** KV 키: docs/<slug> -> <마크다운 본문> */
 const DOC_PREFIX = "docs:";
 
@@ -54,6 +56,16 @@ export async function putToken(env: Env, record: TokenRecord): Promise<void> {
   await env.KV.put(`${TOKEN_PREFIX}${record.hash}`, JSON.stringify(record));
 }
 
+/** 마지막 사용 시각만 별도 키에 기록 (레코드 본체를 다시 쓰지 않도록 분리) */
+export async function putLastUsedAt(env: Env, hash: string, iso: string): Promise<void> {
+  await env.KV.put(`${TOKEN_PREFIX}${hash}${LAST_USED_SUFFIX}`, iso);
+}
+
+/** 마지막 사용 시각 조회 — 별도 키라 본체(revoked 등)를 덮어쓸 수 없다 */
+export async function getLastUsedAt(env: Env, hash: string): Promise<string | null> {
+  return env.KV.get(`${TOKEN_PREFIX}${hash}${LAST_USED_SUFFIX}`);
+}
+
 /** 토큰 해시로 레코드 조회 */
 export async function getTokenByHash(env: Env, hash: string): Promise<TokenRecord | null> {
   const raw = await env.KV.get(`${TOKEN_PREFIX}${hash}`);
@@ -102,15 +114,27 @@ export async function revokeTokenByHash(env: Env, hash: string): Promise<boolean
 /** 전체 토큰 목록 (해시로 저장되어 있으므로 라벨/생성일만) */
 export async function listTokens(env: Env): Promise<TokenRecord[]> {
   const out: TokenRecord[] = [];
+  const lastUsed = new Map<string, string>();
   let cursor: string | undefined;
   while (true) {
     const result = await env.KV.list({ prefix: TOKEN_PREFIX, cursor, limit: 100 });
     for (const key of result.keys) {
+      if (key.name.endsWith(LAST_USED_SUFFIX)) {
+        // 별도 키는 lastUsedAt 값으로만 사용
+        const hashKey = key.name.slice(TOKEN_PREFIX.length, -LAST_USED_SUFFIX.length);
+        const raw = await env.KV.get(key.name);
+        if (raw) lastUsed.set(hashKey, raw);
+        continue;
+      }
       const raw = await env.KV.get(key.name);
       if (raw) out.push(JSON.parse(raw) as TokenRecord);
     }
     if (result.list_complete) break;
     cursor = result.cursor;
+  }
+  for (const record of out) {
+    const lu = lastUsed.get(record.hash);
+    if (lu) record.lastUsedAt = lu;
   }
   return out.sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || ""));
 }
@@ -134,9 +158,24 @@ export async function getDoc(env: Env, slug: string): Promise<DocRecord | null> 
   return raw ? (JSON.parse(raw) as DocRecord) : null;
 }
 
-export async function deleteDoc(env: Env, slug: string): Promise<void> {
+/** 문서 삭제 — 존재하지 않는 slug면 false 반환 */
+export async function deleteDoc(env: Env, slug: string): Promise<boolean> {
+  const existed = (await env.KV.get(`${DOC_PREFIX}${slug}`)) !== null;
   await env.KV.delete(`${DOC_PREFIX}${slug}`);
   await env.KV.delete(`${DOC_PREFIX}:list:${slug}`);
+  return existed;
+}
+
+/** 문서 수정 — 존재하는 slug만 갱신 (없으면 null 반환, 생성하지 않음) */
+export async function updateDoc(
+  env: Env,
+  slug: string,
+  title: string,
+  content: string
+): Promise<DocRecord | null> {
+  const existing = await getDoc(env, slug);
+  if (!existing) return null;
+  return putDoc(env, slug, title, content);
 }
 
 /** slug 목록 (타이틀 메타데이터 포함) */
