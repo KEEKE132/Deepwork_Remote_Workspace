@@ -1,0 +1,10 @@
+name = "deepwork-remote-workspace"
+main = "src/server.ts"
+compatibility_date = "2026-06-11"
+compatibility_flags = ["nodejs_compat"]
+
+# --- KV: tokens + markdown knowledge docs ---
+[[kv_namespaces]]
+binding = "KV"
+id = "placeholder_kv_namespace_id"
+# 배포 전에 `wrangler kv namespace create KV`로 실제 id로 교체
