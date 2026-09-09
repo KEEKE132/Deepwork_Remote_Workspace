@@ -1,12 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { Env } from "./env";
+import { sendAgentMessage, listMailbox, consumeMailboxTask } from "./a2a-server";
 import {
   deleteDoc,
   getDoc,
   getTokenByHash,
   isTokenExpired,
   listDocs,
+  listTokens,
   normalizeSlug,
   putDoc,
   putLastUsedAt,
@@ -164,6 +166,109 @@ export function createKnowledgeMcpServer(env: Env, actor: { label: string }) {
       const deleted = await deleteDoc(env, finalSlug);
       return {
         content: [{ type: "text", text: deleted ? `삭제되었습니다: ${finalSlug}` : `문서를 찾을 수 없습니다: ${finalSlug}` }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "list_registered_agents",
+    {
+      title: "등록된 에이전트 명단",
+      description: "이 A2A 메신저 허브에 등록된(토큰 발급된) 에이전트 라벨 목록을 반환합니다. 메시지를 받을 수 있는 상대를 확인할 때 사용합니다.",
+      inputSchema: z.object({}),
+    },
+    async () => {
+      const records = (await listTokens(env)).filter((r) => !r.revoked && !isTokenExpired(r));
+      if (records.length === 0) {
+        return { content: [{ type: "text", text: "등록된 에이전트가 없습니다." }] };
+      }
+      const lines = records.map((r) => {
+        const exp = r.expiresAt ? new Date(r.expiresAt).toISOString() : "무기한";
+        const last = r.lastUsedAt ? new Date(r.lastUsedAt).toISOString() : "사용 기록 없음";
+        return `- ${r.label} (발급: ${new Date(r.createdAt).toISOString()}, 만료: ${exp}, 마지막 사용: ${last})`;
+      });
+      return { content: [{ type: "text", text: `등록된 에이전트 ${records.length}명:\n` + lines.join("\n") }] };
+    }
+  );
+
+  server.registerTool(
+    "send_agent_message",
+    {
+      title: "에이전트에게 메시지 전송",
+      description: "A2A 메신저 허브를 통해 다른 등록된 에이전트에게 텍스트 메시지를 보냅니다. 해 받는 쪽 사서함에 Task로 전달되며, 수신자가 ListTasks/consumeTask로 확인합니다. 상대 라벨은 list_registered_agents로 확인하세요.",
+      inputSchema: z.object({
+        to: z.string().describe("수신 에이전트 라벨 (list_registered_agents로 확인)"),
+        text: z.string().describe("보낼 메시지 본문"),
+        contextId: z.string().optional().describe("같은 대화 스레드에 이어 보내려면 이전에 받은 contextId를 지정"),
+      }),
+    },
+    async ({ to, text, contextId }) => {
+      if (!to || !text) {
+        return { content: [{ type: "text", text: "to와 text는 필수입니다." }] };
+      }
+      if (to === actor.label) {
+        return { content: [{ type: "text", text: "자기 자신에게는 보낼 수 없습니다." }] };
+      }
+      const result = await sendAgentMessage(env, actor.label, to, text, contextId);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `✅ ${to} 에게 전송되었습니다.\n- taskId: ${result.taskId}\n- contextId: ${result.contextId}\n- 수신자 사서함: ${result.deliveredTo}`,
+          },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    "list_inbox",
+    {
+      title: "내 사서함 조회",
+      description: "현재 연결된 에이전트의 A2A 사서함에 도착한 수신 메시지(Task) 목록을 반환합니다. 메시지 확인 후 consume_task로 읽고 삭제할 수 있습니다.",
+      inputSchema: z.object({}),
+    },
+    async () => {
+      const tasks = await listMailbox(env, actor.label);
+      if (tasks.length === 0) {
+        return { content: [{ type: "text", text: "사서함이 비어 있습니다." }] };
+      }
+      const lines = tasks.map((t) => {
+        const from = t.metadata?.sender ?? "?";
+        const text = t.status?.message?.parts
+          ?.find((p) => p.content?.$case === "text")
+          ?.content?.value ?? "";
+        return `- [${t.id}] ${from}: ${text} (contextId: ${t.contextId}, 상태: ${t.status?.state})`;
+      });
+      return { content: [{ type: "text", text: `사서함 ${tasks.length}건:\n` + lines.join("\n") }] };
+    }
+  );
+
+  server.registerTool(
+    "consume_task",
+    {
+      title: "메시지 소비(읽고 삭제)",
+      description: "내 A2A 사서함에서 taskId로 메시지를 읽고 즉시 삭제합니다. 처리 완료된 메시지는 사서함을 비우기 위해 이 도구로 소비하세요.",
+      inputSchema: z.object({
+        taskId: z.string().describe("소비할 Task ID (list_inbox로 확인)"),
+      }),
+    },
+    async ({ taskId }) => {
+      const task = await consumeMailboxTask(env, actor.label, taskId);
+      if (!task) {
+        return { content: [{ type: "text", text: `Task를 찾을 수 없습니다 (이미 소비되었거나 소유자가 아닙니다): ${taskId}` }] };
+      }
+      const from = task.metadata?.sender ?? "?";
+      const text = task.status?.message?.parts
+        ?.find((p) => p.content?.$case === "text")
+        ?.content?.value ?? "";
+      return {
+        content: [
+          {
+            type: "text",
+            text: `✅ 소비되었습니다.\n- taskId: ${task.id}\n- 보낸이: ${from}\n- 내용: ${text}`,
+          },
+        ],
       };
     }
   );

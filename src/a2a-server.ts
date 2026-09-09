@@ -276,3 +276,77 @@ export function createMessengerHandler(env: Env, senderLabel: string, origin: st
   const handler = new DefaultRequestHandler(agentCard, store, executor);
   return { handler, store, agentCard };
 }
+
+/**
+ * A2A 브리지 헬퍼 (MCP 도구에서 사용)
+ * - sendAgentMessage: fromLabel이 toLabel에게 텍스트 메시지를 전송한다 (SendMessage와 동일 효과)
+ * - listMailbox: label 소유 사서함의 수신 Task 목록을 반환한다 (ListTasks와 동일 효과)
+ * - consumeMailboxTask: label 소유 사서함에서 taskId를 읽고 삭제한다 (consumeTask와 동일 효과)
+ */
+
+function recipientContext(label: string, tenant: string | undefined, requestedVersion: string | undefined): ServerCallContext {
+  return new ServerCallContext({
+    user: { isAuthenticated: true, userName: label },
+    tenant: tenant ?? "",
+    requestedVersion: requestedVersion ?? "1.0",
+  });
+}
+
+/** 수신자 사서함에 텍스트 메시지를 Task로 전달한다 */
+export async function sendAgentMessage(
+  env: Env,
+  fromLabel: string,
+  toLabel: string,
+  text: string,
+  contextId?: string
+): Promise<{ taskId: string; contextId: string; deliveredTo: string }> {
+  const store = new KvTaskStore(env);
+  const cid = contextId || crypto.randomUUID();
+  const incoming = buildIncomingTask(cid, {
+    messageId: crypto.randomUUID(),
+    contextId: cid,
+    role: Role.ROLE_USER,
+    parts: [
+      {
+        content: { $case: "text", value: text },
+        metadata: undefined,
+        filename: "",
+        mediaType: "text/plain",
+      },
+    ],
+    metadata: { to: toLabel },
+    extensions: [],
+    referenceTaskIds: [],
+  } as unknown as Message, fromLabel, text);
+  await deliverToMailbox(store, toLabel, incoming, recipientContext(fromLabel, undefined, undefined));
+  return { taskId: incoming.id, contextId: cid, deliveredTo: toLabel };
+}
+
+/** 소유 사서함의 수신 Task 목록 (라벨 소유) */
+export async function listMailbox(env: Env, label: string): Promise<Task[]> {
+  const store = new KvTaskStore(env);
+  const ctx = recipientContext(label, undefined, undefined);
+  const res = await store.list(
+    {
+      contextId: "",
+      status: TaskState.TASK_STATE_UNSPECIFIED,
+      pageSize: 100,
+      pageToken: "",
+      includeArtifacts: true,
+      tenant: "",
+      statusTimestampAfter: "",
+    },
+    ctx
+  );
+  return res.tasks;
+}
+
+/** 소유 사서함에서 Task 하나를 읽고 삭제 (없으면 undefined) */
+export async function consumeMailboxTask(env: Env, label: string, taskId: string): Promise<Task | undefined> {
+  const store = new KvTaskStore(env);
+  const ctx = recipientContext(label, undefined, undefined);
+  const task = await store.load(taskId, ctx);
+  if (!task) return undefined;
+  await store.consume(taskId, ownerOf(ctx));
+  return task;
+}
