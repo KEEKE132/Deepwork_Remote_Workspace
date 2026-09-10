@@ -19,9 +19,15 @@ import {
 
 /** Bearer 토큰에서 인증된 사용자 라벨을 반환 (실패 시 null) */
 export async function authenticate(env: Env, request: Request): Promise<string | null> {
-  const auth = request.headers.get("Authorization");
-  if (!auth || !auth.startsWith("Bearer ")) return null;
-  const token = auth.slice("Bearer ".length).trim();
+  // 1) 쿼리 파라미터 ?token= (헤더 유실 우회용) 우선
+  let token = new URL(request.url).searchParams.get("token") ?? "";
+  // 2) 쿼리가 없으면 Authorization: Bearer 헤더
+  if (!token) {
+    const auth = request.headers.get("Authorization");
+    if (auth && auth.startsWith("Bearer ")) {
+      token = auth.slice("Bearer ".length).trim();
+    }
+  }
   if (!token) return null;
   const hash = await sha256Hex(token);
   const record = await getTokenByHash(env, hash);
