@@ -27,9 +27,7 @@ const credentialRowsSchema = z.array(
   }),
 );
 
-export async function authenticateAgent(env: Env, request: Request): Promise<Actor | null> {
-  const token = parseBearerToken(request);
-  if (!token) return null;
+export async function authenticateAgentToken(env: Env, token: string): Promise<Actor | null> {
   const tokenHash = await sha256Hex(token);
   const query = new URLSearchParams({
     select:
@@ -75,18 +73,25 @@ export async function authenticateAgent(env: Env, request: Request): Promise<Act
   };
 }
 
+export async function authenticateAgent(env: Env, request: Request): Promise<Actor | null> {
+  const token = parseBearerToken(request);
+  return token ? authenticateAgentToken(env, token) : null;
+}
+
 export async function requireAgent(
   env: Env,
   request: Request,
 ): Promise<{ ok: true; actor: Actor } | { ok: false; response: Response }> {
   const actor = await authenticateAgent(env, request);
   if (!actor) {
+    const url = new URL(request.url);
+    const resourceMetadata = `${url.origin}/.well-known/oauth-protected-resource/mcp`;
     return {
       ok: false,
       response: json(
         { error: "unauthorized", message: "유효한 AMBR Bearer 토큰이 필요합니다." },
         401,
-        { "WWW-Authenticate": "Bearer" },
+        { "WWW-Authenticate": `Bearer resource_metadata="${resourceMetadata}"` },
       ),
     };
   }

@@ -7,6 +7,13 @@ import {
   sendMessageSchema,
   sha256Hex,
 } from "../src/core";
+import {
+  createPkceChallenge,
+  createRegisteredClientId,
+  decryptOAuthToken,
+  encryptOAuthToken,
+  readRegisteredClient,
+} from "../src/oauth";
 
 describe("AMBR bearer authentication", () => {
   it("accepts only an Authorization Bearer token", () => {
@@ -52,5 +59,34 @@ describe("AMBR cursor and message validation", () => {
       ...valid,
       conversationId: "e12a8292-3ac4-4a9c-89d0-31d89f0b20dc",
     })).toThrow();
+  });
+});
+
+describe("AMBR browser OAuth", () => {
+  const oauthKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY";
+
+  it("signs stateless dynamic client registrations and detects tampering", async () => {
+    const clientId = await createRegisteredClientId(oauthKey, {
+      redirectUris: ["http://127.0.0.1:43210/callback/ambr"],
+      clientName: "Codex",
+    });
+    await expect(readRegisteredClient(oauthKey, clientId)).resolves.toMatchObject({
+      redirectUris: ["http://127.0.0.1:43210/callback/ambr"],
+      clientName: "Codex",
+    });
+    await expect(readRegisteredClient(oauthKey, `${clientId}x`)).resolves.toBeNull();
+  });
+
+  it("encrypts a raw AMBR token inside a short-lived authorization code record", async () => {
+    const token = `ambr_${"a".repeat(64)}`;
+    const encrypted = await encryptOAuthToken(oauthKey, token);
+    expect(encrypted).not.toContain(token);
+    await expect(decryptOAuthToken(oauthKey, encrypted)).resolves.toBe(token);
+  });
+
+  it("derives an OAuth S256 PKCE challenge", async () => {
+    await expect(
+      createPkceChallenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"),
+    ).resolves.toBe("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
   });
 });

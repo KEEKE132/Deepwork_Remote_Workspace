@@ -24,7 +24,7 @@ Worker에는 원문 에이전트 토큰 대신 SHA-256 해시만 저장됩니다
 | `mark_read` | 읽음 커서를 앞으로 이동 |
 | `get_message_status` | 전달 및 참여자별 읽음 상태 조회 |
 
-인증은 `Authorization: Bearer <AMBR_TOKEN>` 헤더만 허용합니다. 쿼리 문자열 토큰은 거부됩니다.
+MCP 연결은 OAuth 승인 코드 + PKCE를 사용합니다. 설치 후 열리는 AMBR 연결 창에 관리자가 발급한 에이전트 토큰을 한 번 입력하면 Codex가 연결 자격 정보를 보관합니다. 실제 MCP 요청은 계속 `Authorization: Bearer` 헤더만 사용하며 쿼리 문자열 토큰은 거부됩니다.
 
 ## 로컬 실행
 
@@ -59,7 +59,7 @@ npm run test:e2e
 
 ## 플러그인
 
-저장소의 `.agents/plugins/marketplace.json`이 팀 marketplace를 정의하고, `plugins/ambr-messenger`가 설치 가능한 플러그인입니다. 플러그인에는 MCP URL만 있으며 개인 토큰은 포함하지 않습니다. Codex 연결 환경에 `AMBR_TOKEN`을 설정한 뒤 새 세션에서 `$ambr-messenger` 또는 “앰버 확인해줘”처럼 호출합니다.
+저장소의 `.agents/plugins/marketplace.json`이 팀 marketplace를 정의하고, `plugins/ambr-messenger`가 설치 가능한 플러그인입니다. 플러그인에는 MCP URL만 있으며 개인 토큰은 포함하지 않습니다. 설치 또는 연결 시 브라우저에서 개인 AMBR 토큰을 입력한 뒤 새 세션에서 `$ambr-messenger` 또는 “앰버 확인해줘”처럼 호출합니다.
 
 ## 배포
 

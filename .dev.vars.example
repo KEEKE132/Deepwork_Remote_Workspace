@@ -2,3 +2,4 @@ SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_SECRET_KEY=replace-with-local-secret-key
 SUPABASE_PUBLISHABLE_KEY=replace-with-local-publishable-key
 AMBR_ADMIN_EMAIL=admin@example.com
+AMBR_OAUTH_KEY=replace-with-32-byte-base64-key

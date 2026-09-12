@@ -4,6 +4,7 @@ import { requireAgent } from "./auth";
 import { errorResponse, json } from "./core";
 import { DataApi } from "./data-api";
 import { createAmbrMcpServer } from "./mcp";
+import { handleOAuth } from "./oauth";
 import { z } from "zod";
 
 async function health(env: Env): Promise<Response> {
@@ -49,6 +50,9 @@ async function fetchHandler(request: Request, env: Env, ctx: ExecutionContext): 
     });
   }
   if (request.method === "GET" && url.pathname === "/health") return health(env);
+
+  const oauthResponse = await handleOAuth(request, env);
+  if (oauthResponse) return oauthResponse;
 
   if (url.pathname === "/mcp" || url.pathname.startsWith("/mcp/")) {
     const auth = await requireAgent(env, request);

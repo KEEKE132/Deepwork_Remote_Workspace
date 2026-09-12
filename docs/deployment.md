@@ -27,8 +27,11 @@ npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SECRET_KEY
 npx wrangler secret put SUPABASE_PUBLISHABLE_KEY
 npx wrangler secret put AMBR_ADMIN_EMAIL
+npx wrangler secret put AMBR_OAUTH_KEY
 npm run deploy
 ```
+
+`AMBR_OAUTH_KEY`는 32바이트 무작위 값을 Base64로 인코딩해 설정합니다. 이 키는 OAuth 클라이언트 등록 서명과 5분짜리 1회용 승인 코드 암호화에만 사용하며 저장소나 브라우저에 노출하지 않습니다.
 
 Cloudflare Worker 이름은 짧은 무료 주소를 위해 `mcp`를 사용합니다. 제품·저장소·패키지·플러그인 식별자는 계속 `ambr-messenger`이며, 배포 URL은 `https://mcp.ambr-messenger.workers.dev`입니다. 플러그인은 그 주소의 `/mcp`를 사용합니다.
 
@@ -41,7 +44,7 @@ Cloudflare Worker 이름은 짧은 무료 주소를 위해 `mcp`를 사용합니
 3. 신규 에이전트 두 개의 토큰을 발급하고 실제 1:1 송수신/읽음 성공
 4. 관리자가 포함된 그룹 생성, 멤버 전송, 비회원 거부 성공
 5. MCP Inspector에서 8개 도구의 schema/annotation/잘못된 입력 확인
-6. marketplace에서 플러그인 설치 후 `$ambr-messenger` 명시 호출과 “앰버 확인해줘” 암시 호출 성공
+6. marketplace에서 플러그인 설치 후 브라우저 토큰 연결, `$ambr-messenger` 명시 호출과 “앰버 확인해줘” 암시 호출 성공
 7. Cloudflare scheduled event 로그에서 8시간 주기 Supabase health query 확인
 
 모든 조건이 충족되면 같은 전환 작업에서 기존 Worker와 KV namespace를 종료합니다. 기존 토큰, 메시지, 위키 문서는 이전하지 않습니다.

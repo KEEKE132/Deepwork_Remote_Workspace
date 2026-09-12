@@ -73,6 +73,92 @@ async function connect(token, name) {
   return client;
 }
 
+async function connectThroughBrowserOAuth(ambrToken) {
+  const metadataResponse = await fetch(`${workerUrl}/.well-known/oauth-protected-resource/mcp`);
+  const metadata = await metadataResponse.json();
+  if (metadata.resource !== `${workerUrl}/mcp`) throw new Error("OAuth protected resource metadata mismatch");
+
+  const redirectUri = "http://127.0.0.1:43991/callback/ambr-e2e";
+  const registrationResponse = await fetch(`${workerUrl}/oauth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      redirect_uris: [redirectUri],
+      token_endpoint_auth_method: "none",
+      grant_types: ["authorization_code"],
+      response_types: ["code"],
+      client_name: "AMBR E2E",
+    }),
+  });
+  if (registrationResponse.status !== 201) {
+    throw new Error(`OAuth client registration failed: ${await registrationResponse.text()}`);
+  }
+  const registration = await registrationResponse.json();
+  const verifier = randomBytes(48).toString("base64url");
+  const challenge = createHash("sha256").update(verifier).digest("base64url");
+  const authorizeUrl = new URL(`${workerUrl}/oauth/authorize`);
+  const authorizationParams = {
+    client_id: registration.client_id,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    code_challenge: challenge,
+    code_challenge_method: "S256",
+    state: randomUUID(),
+    resource: `${workerUrl}/mcp`,
+    scope: "ambr",
+  };
+  for (const [key, value] of Object.entries(authorizationParams)) authorizeUrl.searchParams.set(key, value);
+  const authorizationPage = await fetch(authorizeUrl);
+  const pageHtml = await authorizationPage.text();
+  const csrfToken = /name="csrf_token" value="([^"]+)"/u.exec(pageHtml)?.[1];
+  const cookie = authorizationPage.headers.get("set-cookie")?.split(";", 1)[0];
+  if (!csrfToken || !cookie || !pageHtml.includes("에이전트 토큰")) {
+    throw new Error("OAuth token-entry page did not load");
+  }
+
+  const approvalResponse = await fetch(`${workerUrl}/oauth/authorize`, {
+    method: "POST",
+    redirect: "manual",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Cookie: cookie },
+    body: new URLSearchParams({ ...authorizationParams, csrf_token: csrfToken, ambr_token: ambrToken }),
+  });
+  if (approvalResponse.status !== 302) {
+    throw new Error(`OAuth token approval failed: ${approvalResponse.status} ${await approvalResponse.text()}`);
+  }
+  const callback = new URL(approvalResponse.headers.get("location"));
+  const code = callback.searchParams.get("code");
+  if (!code || callback.searchParams.get("state") !== authorizationParams.state) {
+    throw new Error("OAuth authorization response mismatch");
+  }
+
+  async function exchange(codeVerifier) {
+    return fetch(`${workerUrl}/oauth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        code_verifier: codeVerifier,
+        client_id: registration.client_id,
+        redirect_uri: redirectUri,
+        resource: `${workerUrl}/mcp`,
+      }),
+    });
+  }
+
+  const wrongVerifier = randomBytes(48).toString("base64url");
+  const rejectedExchange = await exchange(wrongVerifier);
+  if (rejectedExchange.status !== 400) throw new Error("OAuth PKCE mismatch was not rejected");
+  const tokenResponse = await exchange(verifier);
+  const tokens = await tokenResponse.json();
+  if (!tokenResponse.ok || tokens.access_token !== ambrToken || tokens.token_type !== "Bearer") {
+    throw new Error("OAuth token exchange failed");
+  }
+  const replayResponse = await exchange(verifier);
+  if (replayResponse.status !== 400) throw new Error("OAuth authorization code replay was not rejected");
+  return tokens.access_token;
+}
+
 const suffix = randomUUID().slice(0, 8);
 const firstHandle = `e2e-one-${suffix}`;
 const secondHandle = `e2e-two-${suffix}`;
@@ -100,7 +186,8 @@ try {
 
   await createAgent(firstHandle, firstToken, undefined, "Coordinates AMBR end-to-end verification.");
   await createAgent(secondHandle, secondToken, undefined, "Receives AMBR verification messages.");
-  firstClient = await connect(firstToken, "ambr-e2e-first");
+  const oauthAccessToken = await connectThroughBrowserOAuth(firstToken);
+  firstClient = await connect(oauthAccessToken, "ambr-e2e-first");
   secondClient = await connect(secondToken, "ambr-e2e-second");
 
   const tools = await firstClient.listTools();
@@ -246,6 +333,7 @@ try {
     status: "pass",
     tools: actualTools.length,
     contactDescription: true,
+    browserOAuth: true,
     authCases: 5,
     delivered: true,
     directConversationReused: true,

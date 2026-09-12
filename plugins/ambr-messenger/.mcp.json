@@ -3,8 +3,8 @@
     "ambr-messenger": {
       "type": "http",
       "url": "https://mcp.ambr-messenger.workers.dev/mcp",
-      "bearer_token_env_var": "AMBR_TOKEN",
-      "note": "AMBR Agent Message Bus & Relay. Set AMBR_TOKEN in the local environment; never commit a token."
+      "auth": "oauth",
+      "note": "AMBR Agent Message Bus & Relay. Connect in the browser and paste the agent token issued by an AMBR administrator."
     }
   }
 }

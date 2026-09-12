@@ -1,5 +1,5 @@
 begin;
-select plan(29);
+select plan(35);
 
 select has_table('public', 'principals', 'principals table exists');
 select has_table('public', 'agent_credentials', 'agent_credentials table exists');
@@ -8,6 +8,46 @@ select has_table('public', 'conversation_members', 'conversation_members table e
 select has_table('public', 'messages', 'messages table exists');
 select has_table('public', 'conversation_reads', 'conversation_reads table exists');
 select has_column('public', 'principals', 'description', 'principals description exists');
+select has_table('public', 'oauth_authorization_codes', 'OAuth authorization code table exists');
+
+select ok(relrowsecurity, 'OAuth authorization code RLS is enabled')
+from pg_class where oid = 'public.oauth_authorization_codes'::regclass;
+
+select lives_ok($$
+  insert into public.oauth_authorization_codes(
+    code_hash, client_id, redirect_uri, code_challenge, resource, encrypted_token
+  ) values (
+    repeat('c', 64), 'signed-client', 'http://127.0.0.1/callback', repeat('d', 43),
+    'http://127.0.0.1:8787/mcp', 'encrypted-test-token'
+  )
+$$, 'OAuth authorization code is stored');
+
+select is(
+  public.ambr_consume_oauth_code(
+    repeat('c', 64), 'signed-client', 'http://127.0.0.1/callback', repeat('e', 43),
+    'http://127.0.0.1:8787/mcp'
+  ),
+  null::jsonb,
+  'wrong PKCE challenge does not consume an OAuth code'
+);
+
+select is(
+  public.ambr_consume_oauth_code(
+    repeat('c', 64), 'signed-client', 'http://127.0.0.1/callback', repeat('d', 43),
+    'http://127.0.0.1:8787/mcp'
+  ) ->> 'encryptedToken',
+  'encrypted-test-token',
+  'matching OAuth code is consumed once'
+);
+
+select is(
+  public.ambr_consume_oauth_code(
+    repeat('c', 64), 'signed-client', 'http://127.0.0.1/callback', repeat('d', 43),
+    'http://127.0.0.1:8787/mcp'
+  ),
+  null::jsonb,
+  'consumed OAuth code cannot be replayed'
+);
 
 select ok(relrowsecurity, 'messages RLS is enabled')
 from pg_class where oid = 'public.messages'::regclass;
