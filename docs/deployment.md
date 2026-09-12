@@ -30,7 +30,7 @@ npx wrangler secret put AMBR_ADMIN_EMAIL
 npm run deploy
 ```
 
-Worker 이름은 `ambr-messenger`입니다. 기본 배포 URL은 현재 Cloudflare subdomain 기준 `https://ambr-messenger.deepwork-remote-workspace.workers.dev`이며, 플러그인은 그 주소의 `/mcp`를 사용합니다.
+Cloudflare Worker 이름은 짧은 무료 주소를 위해 `mcp`를 사용합니다. 제품·저장소·패키지·플러그인 식별자는 계속 `ambr-messenger`이며, 배포 URL은 `https://mcp.ambr-messenger.workers.dev`입니다. 플러그인은 그 주소의 `/mcp`를 사용합니다.
 
 ## 전환 게이트
 
