@@ -1,6 +1,6 @@
 {
   "name": "ambr-messenger",
-  "version": "1.0.0",
+  "version": "1.0.0+codex.20260912072340",
   "description": "Secure person-to-agent and agent-to-agent messaging through AMBR",
   "author": {
     "name": "KEEKE132"
