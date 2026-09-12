@@ -261,17 +261,19 @@ function formField(name: string, value: string | undefined): string {
     : `<input type="hidden" name="${name}" value="${escapeHtml(value)}">`;
 }
 
-function securityHeaders(cookie?: string): Headers {
+function securityHeaders(cookie?: string, scriptNonce?: string): Headers {
+  const contentSecurityPolicy = [
+    "default-src 'none'",
+    "style-src 'unsafe-inline'",
+    "img-src 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'none'",
+  ];
+  if (scriptNonce) contentSecurityPolicy.push(`script-src 'nonce-${scriptNonce}'`);
   const headers = new Headers({
     "Cache-Control": "no-store",
-    "Content-Security-Policy": [
-      "default-src 'none'",
-      "style-src 'unsafe-inline'",
-      "img-src 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "base-uri 'none'",
-    ].join("; "),
+    "Content-Security-Policy": contentSecurityPolicy.join("; "),
     "Content-Type": "text/html; charset=utf-8",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
@@ -304,6 +306,7 @@ function authorizationPage(
 ): Response {
   const clientName = escapeHtml(client.clientName ?? "Codex");
   const errorMarkup = error ? `<div class="error" role="alert">${escapeHtml(error)}</div>` : "";
+  const scriptNonce = randomBase64Url(18);
   const html = `<!doctype html>
 <html lang="ko">
 <head>
@@ -324,6 +327,7 @@ function authorizationPage(
     input[type=password] { width: 100%; min-height: 48px; border: 1px solid #cfc7df; border-radius: 12px; padding: 0 14px; font: inherit; }
     input[type=password]:focus { outline: 3px solid rgba(109, 94, 245, .18); border-color: #6d5ef5; }
     button { width: 100%; min-height: 48px; margin-top: 14px; border: 0; border-radius: 12px; color: #fff; background: #6657e5; font: inherit; font-weight: 750; cursor: pointer; }
+    button:disabled { cursor: wait; opacity: .7; }
     .error { margin-top: 18px; padding: 12px 14px; border-radius: 10px; color: #962f28; background: #fff0ed; font-size: 14px; }
     .note { margin: 18px 0 0; font-size: 12px; color: #7c748e; }
     code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
@@ -349,10 +353,54 @@ function authorizationPage(
       <button type="submit">AMBR 연결하기</button>
     </form>
     <p class="note">토큰은 주소나 로그에 넣지 않습니다. 검증 후 5분짜리 1회용 승인 코드로 교환됩니다.</p>
+    <script nonce="${scriptNonce}">
+      document.querySelector("form")?.addEventListener("submit", (event) => {
+        const form = event.currentTarget;
+        const button = form.querySelector("button");
+        form.setAttribute("aria-busy", "true");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "토큰 확인 중…";
+        }
+      });
+    </script>
   </main>
 </body>
 </html>`;
-  return new Response(html, { headers: securityHeaders(csrfCookie(csrfToken)) });
+  return new Response(html, { headers: securityHeaders(csrfCookie(csrfToken), scriptNonce) });
+}
+
+function authorizationSuccessPage(callbackUrl: string): Response {
+  const escapedCallback = escapeHtml(callbackUrl);
+  const html = `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0; url=${escapedCallback}">
+  <title>AMBR 연결 승인됨</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #241f3d; background: #f6f3ee; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    main { width: min(100%, 460px); background: #fff; border: 1px solid #ded8ec; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 18px 55px rgba(61, 47, 109, .12); }
+    .mark { width: 52px; height: 52px; margin: 0 auto 18px; border-radius: 16px; display: grid; place-items: center; color: white; font-weight: 800; background: linear-gradient(145deg, #7768ef, #5546c9); }
+    h1 { margin: 0 0 10px; font-size: 25px; }
+    p { color: #655e79; line-height: 1.6; }
+    a { display: inline-block; margin-top: 12px; color: #5546c9; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark">A</div>
+    <h1>연결이 승인되었습니다</h1>
+    <p>Codex로 돌아가는 중입니다. 자동으로 돌아가지 않으면 아래 링크를 눌러주세요.</p>
+    <a href="${escapedCallback}">Codex로 돌아가기</a>
+  </main>
+</body>
+</html>`;
+  const headers = securityHeaders(csrfCookie("", true));
+  headers.set("Refresh", `0; url=${callbackUrl}`);
+  return new Response(html, { status: 200, headers });
 }
 
 async function readLimitedText(request: Request, limit: number): Promise<string> {
@@ -527,7 +575,12 @@ async function handleAuthorization(request: Request, env: Env): Promise<Response
     !csrfFromCookie ||
     !(await constantTimeEqual(new TextEncoder().encode(csrfFromForm), new TextEncoder().encode(csrfFromCookie)))
   ) {
-    return oauthError("invalid_request", "인증 화면이 만료되었습니다. 연결을 다시 시작해주세요.");
+    return authorizationPage(
+      params,
+      client,
+      randomBase64Url(32),
+      "인증 화면을 새로 갱신했습니다. 토큰을 다시 입력해주세요.",
+    );
   }
 
   const token = form.get("ambr_token")?.trim() ?? "";
@@ -560,14 +613,7 @@ async function handleAuthorization(request: Request, env: Env): Promise<Response
   target.searchParams.set("code", code);
   if (params.state) target.searchParams.set("state", params.state);
   target.searchParams.set("iss", origin);
-  return new Response(null, {
-    status: 302,
-    headers: {
-      "Cache-Control": "no-store",
-      Location: target.href,
-      "Set-Cookie": csrfCookie("", true),
-    },
-  });
+  return authorizationSuccessPage(target.href);
 }
 
 async function handleToken(request: Request, env: Env): Promise<Response> {

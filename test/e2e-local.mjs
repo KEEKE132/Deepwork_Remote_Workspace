@@ -126,10 +126,12 @@ async function connectThroughBrowserOAuth(ambrToken) {
     headers: { "Content-Type": "application/x-www-form-urlencoded", Cookie: cookie },
     body: new URLSearchParams({ ...authorizationParams, csrf_token: csrfToken, ambr_token: ambrToken }),
   });
-  if (approvalResponse.status !== 302) {
+  if (approvalResponse.status !== 200) {
     throw new Error(`OAuth token approval failed: ${approvalResponse.status} ${await approvalResponse.text()}`);
   }
-  const callback = new URL(approvalResponse.headers.get("location"));
+  const refresh = approvalResponse.headers.get("refresh");
+  if (!refresh?.startsWith("0; url=")) throw new Error("OAuth callback refresh was not returned");
+  const callback = new URL(refresh.slice("0; url=".length));
   const code = callback.searchParams.get("code");
   if (!code || callback.searchParams.get("state") !== authorizationParams.state) {
     throw new Error("OAuth authorization response mismatch");
