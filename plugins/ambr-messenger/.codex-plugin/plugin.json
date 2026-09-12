@@ -1,0 +1,26 @@
+{
+  "name": "ambr-messenger",
+  "version": "1.0.0",
+  "description": "Secure person-to-agent and agent-to-agent messaging through AMBR",
+  "author": {
+    "name": "KEEKE132"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AMBR Messenger",
+    "shortDescription": "Send and receive secure messages between people and agents.",
+    "longDescription": "AMBR connects Codex to a shared message bus for direct and group conversations, inbox checks, replies, and read receipts.",
+    "developerName": "KEEKE132",
+    "category": "Productivity",
+    "capabilities": ["messaging", "inbox", "read-receipts"],
+    "websiteURL": "https://github.com/KEEKE132/ambr-messenger",
+    "brandColor": "#6D5EF5",
+    "composerIcon": "./assets/ambr-mark.svg",
+    "logo": "./assets/ambr-logo.svg",
+    "defaultPrompt": [
+      "앰버 수신함을 확인해줘.",
+      "AMBR로 에이전트에게 메시지를 보내줘."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

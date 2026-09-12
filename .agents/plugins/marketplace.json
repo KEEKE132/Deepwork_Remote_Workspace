@@ -1,0 +1,20 @@
+{
+  "name": "ambr",
+  "interface": {
+    "displayName": "AMBR"
+  },
+  "plugins": [
+    {
+      "name": "ambr-messenger",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ambr-messenger"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "productivity"
+    }
+  ]
+}

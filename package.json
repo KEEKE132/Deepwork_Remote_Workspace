@@ -1,25 +1,47 @@
 {
-  "name": "deepwork-remote-workspace",
-  "version": "0.1.0",
-  "description": "DeepWork shared knowledge workspace - remote stateless MCP server on Cloudflare Workers + token admin page",
+  "name": "ambr-messenger",
+  "version": "1.0.0",
+  "description": "AMBR (Agent Message Bus & Relay) — a secure MCP messenger for people and agents",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^22.18.0 || >=24.11.0"
+  },
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "check": "tsc --noEmit",
-    "types": "wrangler types env.d.ts --include-runtime false"
+    "build": "npm run build:web && npm run typecheck",
+    "build:web": "vite build --config web/vite.config.ts",
+    "check": "npm run typecheck && npm test && npm run build:web && wrangler deploy --dry-run",
+    "deploy": "npm run build:web && wrangler deploy --minify",
+    "dev": "npm run build:web && wrangler dev",
+    "dev:web": "vite --config web/vite.config.ts",
+    "test": "vitest run",
+    "test:db": "supabase test db",
+    "test:e2e": "node test/e2e-local.mjs",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && tsc -p web/tsconfig.json --noEmit",
+    "types": "wrangler types",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset"
   },
   "dependencies": {
-    "@a2a-js/sdk": "^1.1.0",
     "@modelcontextprotocol/sdk": "1.30.0",
     "@modelcontextprotocol/server": "2.0.0",
-    "agents": "*",
-    "zod": "^4.5.4"
+    "@supabase/supabase-js": "2.116.0",
+    "agents": "0.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260729.1",
-    "typescript": "^6.0.3",
-    "wrangler": "^4.115.0"
+    "@types/node": "22.20.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.1.1",
+    "supabase": "2.117.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.0",
+    "vitest": "4.1.11",
+    "wrangler": "4.131.1"
   }
 }

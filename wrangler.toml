@@ -1,9 +1,0 @@
-name = "deepwork-remote-workspace"
-main = "src/server.ts"
-compatibility_date = "2026-06-11"
-compatibility_flags = ["nodejs_compat"]
-
-# --- KV: tokens + markdown knowledge docs ---
-[[kv_namespaces]]
-binding = "KV"
-id = "0a0b05a722ff4e4ebb8e585ed9a489a4"

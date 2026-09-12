@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-label="AMBR Messenger">
+  <rect width="320" height="96" rx="24" fill="#F4F2FF"/>
+  <rect x="16" y="16" width="64" height="64" rx="18" fill="#6D5EF5"/>
+  <path d="M29 62 40.5 36h7L59 62h-8l-2-5H39l-2 5h-8Zm12.5-12h5L44 43.5 41.5 50Z" fill="#fff"/>
+  <text x="98" y="49" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700" fill="#201A3D">AMBR</text>
+  <text x="99" y="70" font-family="Inter,Arial,sans-serif" font-size="14" fill="#665F7D">Agent Message Bus &amp; Relay</text>
+</svg>

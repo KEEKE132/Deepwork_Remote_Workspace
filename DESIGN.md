@@ -1,281 +1,50 @@
----
-version: 1.0.0
-name: agent-comm-report-design
-description: "전문적 기술 조사 보고서 디자인. 딥 인디고 캔버스, 화이트 카드 서피스, 인디고-바이올렛 프라이머리, 명확한 문서 계층, 8px 그리드 기반."
-colors:
-  primary: "#4F46E5"
-  primary-hover: "#4338CA"
-  primary-focus: "#7C6DF2"
-  ink: "#1F2937"
-  ink-muted: "#6B7280"
-  ink-subtle: "#9CA3AF"
-  canvas: "#FFFFFF"
-  surface-1: "#F9FAFB"
-  surface-2: "#F3F4F6"
-  hairline: "#E5E7EB"
-  on-primary: "#FFFFFF"
-  semantic-success: "#10B981"
-  semantic-overlay: "#EEF2FF"
-typography:
-  display-xl:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 40px
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: -1.0px
-  display-lg:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 32px
-    fontWeight: 700
-    lineHeight: 1.20
-    letterSpacing: -0.5px
-  display-md:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 26px
-    fontWeight: 700
-    lineHeight: 1.25
-    letterSpacing: -0.2px
-  headline:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 20px
-    fontWeight: 600
-    lineHeight: 1.30
-    letterSpacing: -0.1px
-  body-lg:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 17px
-    fontWeight: 400
-    lineHeight: 1.60
-    letterSpacing: 0
-  body:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 15px
-    fontWeight: 400
-    lineHeight: 1.60
-    letterSpacing: 0
-  body-sm:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 13.5px
-    fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: 0
-  caption:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 12px
-    fontWeight: 400
-    lineHeight: 1.50
-    letterSpacing: 0
-  button:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 14px
-    fontWeight: 500
-    lineHeight: 1.20
-    letterSpacing: 0
-  eyebrow:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 12.5px
-    fontWeight: 600
-    lineHeight: 1.40
-    letterSpacing: 0.8px
-  mono:
-    fontFamily: "ui-monospace, SF Mono, Menlo, monospace"
-    fontSize: 13px
-    fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: 0
-rounded:
-  xs: 6px
-  sm: 8px
-  md: 12px
-  lg: 16px
-  xl: 20px
-  pill: 9999px
-spacing:
-  xxs: 4px
-  xs: 8px
-  sm: 12px
-  md: 16px
-  lg: 24px
-  xl: 32px
-  xxl: 48px
-  section: 72px
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button}"
-    rounded: "{rounded.md}"
-    padding: 10px 16px
-  button-primary-hover:
-    backgroundColor: "{colors.primary-hover}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button}"
-    rounded: "{rounded.md}"
-    padding: 10px 16px
-  button-secondary:
-    backgroundColor: "{colors.surface-1}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button}"
-    rounded: "{rounded.md}"
-    padding: 10px 16px
-  feature-card:
-    backgroundColor: "{colors.surface-1}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    rounded: "{rounded.lg}"
-    padding: 24px
-  code-block:
-    backgroundColor: "{colors.surface-2}"
-    textColor: "{colors.ink-muted}"
-    typography: "{typography.mono}"
-    rounded: "{rounded.md}"
-    padding: 16px
-  top-nav:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-sm}"
-    rounded: "{rounded.xs}"
-    height: 56px
-  footer:
-    backgroundColor: "{colors.surface-1}"
-    textColor: "{colors.ink-subtle}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.xs}"
-    padding: 24px 16px
----
+# AMBR 설계
 
-## Overview
+## 제품 경계
 
-딥 인디고-바이올렛(`{colors.primary}`)을 단일 크로매틱 액센트로 사용하고, 흰색 캔버스(`{colors.canvas}`) 위에 1px 헤어라인으로 층을 만든 표면을 얹는다. 텍스트는 진한 회청 잉크(`{colors.ink}`)로 명확한 계층을 만들고, 본문 15px / 헤드라인 20px 기반의 문서형 타이포그래피를 쓴다. 8px 베이스 그리드로 리듬을 고정하고, 카드·표·코드블록에 은은한 라운딩(`{rounded.md}`~`{rounded.lg}`)을 적용한다. 깊이는 그림자 대신 표면 + 헤어라인 위계로 표현한다.
+AMBR는 에이전트와 사람 사이의 메시지 전달·보관·읽음 상태만 담당합니다. 지식 문서/위키, A2A Agent Card, JSON-RPC task orchestration, 파일 첨부는 제품 범위 밖입니다.
 
-**Key Characteristics:**
-- 단일 크로매틱 액센트: 인디고-바이올렛 하나만 색으로 사용
-- 흰색/회색 표면 위계 + 1px 헤어라인으로 깊이 표현 (그림자 지양)
-- 문서 중심 타이포그래피: Inter, 15px 본문, 넉넉한 행간(1.6)
-- 8px 그리드 기반 라운딩·간격
-- 표·카드·코드블록을 명확히 구분하는 데이터 보고서 스타일
-- 모노스페이스는 코드·토큰·엔드포인트에만 사용
+## 요청 흐름
 
-## Colors
+```text
+Codex/ChatGPT -- Bearer token --> Cloudflare Worker /mcp
+Administrator -- Supabase Auth --> React /admin --> Worker /api/admin/*
+                                             |
+                                             +--> Supabase Data API/Postgres
+                                             +--> Supabase Realtime (UI refresh)
+```
 
-> Source pages: 전문 기술 문서·리서치 리포트 디자인 시스템 (사용자 제출 보고서 요구사항 기반).
+Worker가 신뢰 경계입니다. 에이전트 토큰과 관리자 JWT를 확인하고, 서버 전용 Supabase Secret Key로 Data API/RPC를 호출합니다. Secret Key와 원문 AMBR 토큰은 브라우저 응답, 로그, Git에 포함하지 않습니다.
 
-### Brand & Accent
-- **Primary** (`{colors.primary}`): 핵심 강조색. 섹션 헤더, 인라인 링크, 핵심 키워드, 진행바, 하이라이트. **단일 액센트 원칙**.
-- **Primary Hover** (`{colors.primary-hover}`): 인터랙션 hover 상태.
-- **Primary Focus** (`{colors.primary-focus}`): 포커스 링.
+## 데이터 모델
 
-### Surface
-- **Canvas** (`{colors.canvas}`): 페이지 배경.
-- **Surface-1** (`{colors.surface-1}`): 기본 카드·표 배경.
-- **Surface-2** (`{colors.surface-2}`): 코드블록·중첩된 요소.
-- **Hairline** (`{colors.hairline}`): 카드·표 구분선.
+- `principals`: 사람/에이전트 공통 주소록, 고유 소문자 handle, 활성 상태
+- `admin_users`: 허용된 관리자 이메일과 Supabase Auth 사용자 연결
+- `agent_credentials`: SHA-256 토큰 해시, 만료/폐기/최근 사용 시각
+- `conversations`: 직접 또는 그룹 대화
+- `conversation_members`: 역할, 가입/탈퇴 상태
+- `messages`: 본문, 답장, task, 우선순위, 링크, 멱등성 ID, 만료/삭제 시각
+- `conversation_reads`: 참여자별 마지막 읽은 메시지와 시각
 
-### Text
-- **Ink** (`{colors.ink}`): 본문·헤드라인 텍스트.
-- **Ink-muted** (`{colors.ink-muted}`): 보조 텍스트, 표의 부가 설명.
-- **Ink-subtle** (`{colors.ink-subtle}`): 주석·푸터.
-- **On-primary** (`{colors.on-primary}`): primary 배경 위 텍스트.
+직접 대화는 정렬된 두 참여자 조합으로 유일합니다. `(sender_id, client_message_id)` 제약이 재시도 중복을 막습니다. 커서는 생성 시각과 UUID를 함께 인코딩해 안정적으로 페이지를 넘깁니다.
 
-### Semantic
-- **Success** (`{colors.semantic-success}`): 안정화·적용 완료 상태 배지.
-- **Overlay** (`{colors.semantic-overlay}`): primary 배경을 얇게 깐 하이라이트 박스.
+## 권한
 
-## Typography
+- 에이전트: 활성·미폐기·미만료 토큰으로 자신이 참여한 대화만 읽고 전송
+- 관리자: 모든 대화 조회/삭제, 에이전트·토큰·그룹 관리
+- 관리자 발신: 자신이 멤버인 대화만 허용. 제3자 에이전트끼리의 직접 대화에 사칭 발신하지 않음
+- 미래 일반 사용자: RLS에서 자신의 참여 대화만 조회하도록 관리자 정책과 분리
 
-### Font Family
-- **Inter** (system-ui 대체): 본문·헤드라인. (라이선스 부담 없는 오픈소스, 시스템 폰트로 폴백)
-- **모노스페이스**: `ui-monospace, SF Mono, Menlo` — 코드·토큰·엔드포인트 전용.
+관리자 Auth 사용자와 principal 연결은 동시 API 요청에서도 하나만 만들어지도록 트랜잭션 advisory lock을 사용합니다. 에이전트 `last_seen_at`은 마지막 기록과 15분 이상 차이 날 때만 갱신합니다.
 
-### Hierarchy
+## 보관
 
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.display-xl}` | 40px | 700 | 1.15 | -1.0px | 리포트 히어로 타이틀 |
-| `{typography.display-lg}` | 32px | 700 | 1.20 | -0.5px | 섹션 헤더 |
-| `{typography.headline}` | 20px | 600 | 1.30 | -0.1px | 카드·서브섹션 타이틀 |
-| `{typography.body}` | 15px | 400 | 1.60 | 0 | 기본 본문 |
-| `{typography.body-sm}` | 13.5px | 400 | 1.55 | 0 | 표 부가, 캡션 |
-| `{typography.mono}` | 13px | 400 | 1.55 | 0 | 코드·토큰 |
+메시지는 생성 30일 후 `pg_cron` 정리 작업이 물리 삭제합니다. 관리자 수동 삭제는 본문, 답장 연결, task, 우선순위, 링크, 멱등성 ID를 즉시 제거하고 삭제 표시만 원래 만료 시각까지 남깁니다.
 
-### Principles
-- 헤드라인은 가독성 우선의 촘촘한 자간(-0.5px 이내)으로 명확한 위계
-- 본문은 긴 리포트 독해를 위해 충분한 행간 1.6
-- 대문자·이탤릭 남용 금지, 강조는 ink-weight + primary 액센트로만
+## 운영
 
-## Layout
+Cloudflare scheduled handler가 8시간마다 실제 Supabase health query를 수행합니다. 이 호출은 Free 프로젝트 정지를 줄이는 best-effort keepalive이며 가용성을 보장하지 않습니다. `/health`는 Worker와 데이터베이스 연결을 함께 확인합니다.
 
-### Spacing System
-- **Base unit**: 8px.
-- **Tokens**: `{spacing.xs}` 8px · `{spacing.md}` 16px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 72px.
+## UI
 
-### Grid & Container
-- Max content width: 1080px. 카드: desktop 3-up → tablet 2-up → mobile 1-up.
-- 섹션 간 `{spacing.section}` 72px, 컴포넌트 간 `{spacing.md}` 16px.
-
-### Whitespace Philosophy
-- 정보 밀도가 높은 기술 문서이므로, 카드·표 내부보다 **섹션 사이 여백**을 크게 둬 독해 리듬을 만든다.
-- 헤드라인 위 여백 > 아래 여백 (제목이 소속 요소를 이끄는 전형).
-
-## Elevation & Depth
-
-| Level | Treatment | Use |
-|---|---|---|
-| 0 (flat) | 캔버스 + 헤어라인 없음 | 본문·배경 |
-| 1 (surface lift) | `{colors.surface-1}` + 1px `{colors.hairline}` | 기본 카드·표 |
-| 2 (emphasis) | `{colors.surface-2}` + 1px `{colors.hairline}` | 코드블록·중첩 영역 |
-
-깊이는 **그림자가 아닌 표면 위계 + 헤어라인**으로만 표현한다.
-
-## Shapes
-
-### Border Radius Scale
-
-| Token | Value | Use |
-|---|---|---|
-| `{rounded.md}` | 12px | 버튼·인라인 배지·코드블록 |
-| `{rounded.lg}` | 16px | 카드·표 컨테이너 |
-| `{rounded.pill}` | 9999px | 상태 배지·태그 |
-
-## Components
-
-### Buttons
-**`button-primary`** — 핵심 CTA. 배경 `{colors.primary}`, 텍스트 `{colors.on-primary}`, 타입 `{typography.button}`, 패딩 10px 16px, 라운드 `{rounded.md}`. hover `{colors.primary-hover}`.
-
-### Cards & Containers
-**`feature-card`** — 표준 정보 카드. 배경 `{colors.surface-1}`, 텍스트 `{colors.ink}`, 패딩 24px, 라운드 `{rounded.lg}`, 1px `{colors.hairline}`.
-
-### Code & Tokens
-**`code-block`** — 코드·엔드포인트 블록. 배경 `{colors.surface-2}`, 모노 타입 `{typography.mono}`, 라운드 `{rounded.md}`.
-
-## Do's and Don'ts
-
-**Do**
-- 단일 크로매틱 액센트인 `{colors.primary}`만 색으로 사용
-- 표면 위계 + 헤어라인으로 깊이 표현 (그림자 금지)
-- 모노스페이스는 코드·토큰·엔드포인트에만 적용
-- 카드·표 내부 패딩과 섹션 간격은 8px 그리드 준수
-
-**Don't**
-- 다중 액센트·그라데이션·버튼 3개 이상 사용 금지
-- 본문에 대문자 남용·이탤릭·밑줄 강조 금지
-- 1080px 컨테이너를 넘는 콘텐츠 폭 금지
-- 표에 3단 이상 중첩 또는 과도한 컬러 셀 금지
-
-## Responsive Behavior
-
-- **Mobile (< 768px)**: 카드·표 1-up, 본문 15px 유지, 섹션 패딩 축소(48px).
-- **Tablet (768–1024px)**: 카드 2-up, 표 가로 스크롤 허용.
-- **Desktop (> 1024px)**: 카드 3-up, 1080px 컨테이너, 표 전체 표시.
-
-## Agent Prompt Guide
-
-Quick references for generation prompts:
-
-- **Colors**: canvas `{colors.canvas}` · ink `{colors.ink}` · primary `{colors.primary}`
-- **Type**: display `{typography.display-xl}` · body `{typography.body}` · button `{typography.button}`
-- **Radius**: buttons `{rounded.md}` · cards `{rounded.lg}` · pills `{rounded.pill}`
-
-Prompt template: "Build a {report-section} for {topic}. Use DESIGN.md tokens: canvas
-{colors.canvas}, primary {colors.primary}, headline {typography.headline}, card radius
-{rounded.lg}, section spacing {spacing.section}. Follow the Do/Don't guardrails."
+관리자 UI는 모바일과 데스크톱 모두에서 대화 목록, 메시지, 그룹/멤버, 에이전트, 토큰을 관리합니다. 토큰 원문은 생성 직후 한 번만 표시합니다. Realtime 이벤트는 UI 데이터 재조회 신호로만 사용하고 권한 판단은 항상 Worker와 Postgres에서 다시 수행합니다.

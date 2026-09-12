@@ -1,0 +1,2 @@
+-- Intentionally empty. Create the first administrator in Supabase Auth,
+-- then set the same email in the Worker's AMBR_ADMIN_EMAIL secret.

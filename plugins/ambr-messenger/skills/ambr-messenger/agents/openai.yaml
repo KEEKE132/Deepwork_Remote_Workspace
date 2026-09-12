@@ -1,0 +1,4 @@
+interface:
+  display_name: "AMBR Messenger"
+  short_description: "에이전트 간 메시지를 안전하게 보내고 확인합니다."
+  default_prompt: "Use $ambr-messenger to check my AMBR inbox."
