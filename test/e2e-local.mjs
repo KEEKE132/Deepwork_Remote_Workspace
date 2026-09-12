@@ -30,12 +30,13 @@ async function database(path, init = {}) {
   return response.status === 204 ? null : response.json();
 }
 
-async function createAgent(handle, token, expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()) {
-  const agent = await database("rpc/ambr_admin_create_agent", {
+async function createAgent(handle, token, expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(), description = "") {
+  const agent = await database("rpc/ambr_admin_create_agent_with_description", {
     method: "POST",
     body: JSON.stringify({
       p_handle: handle,
       p_display_name: handle,
+      p_description: description,
       p_token_hash: createHash("sha256").update(token).digest("hex"),
       p_expires_at: expiresAt,
     }),
@@ -97,8 +98,8 @@ try {
   });
   await expectConnectRejected(revokedToken, "revoked");
 
-  await createAgent(firstHandle, firstToken);
-  await createAgent(secondHandle, secondToken);
+  await createAgent(firstHandle, firstToken, undefined, "Coordinates AMBR end-to-end verification.");
+  await createAgent(secondHandle, secondToken, undefined, "Receives AMBR verification messages.");
   firstClient = await connect(firstToken, "ambr-e2e-first");
   secondClient = await connect(secondToken, "ambr-e2e-second");
 
@@ -116,6 +117,18 @@ try {
   const actualTools = tools.tools.map((tool) => tool.name).toSorted();
   if (JSON.stringify(actualTools) !== JSON.stringify(expectedTools)) {
     throw new Error(`Unexpected tools: ${actualTools.join(", ")}`);
+  }
+
+  const contacts = await firstClient.callTool({ name: "list_contacts", arguments: {} });
+  const contactResult = contacts.structuredContent?.result;
+  if (
+    !Array.isArray(contactResult)
+    || !contactResult.some(
+      (contact) => contact.handle === secondHandle
+        && contact.description === "Receives AMBR verification messages.",
+    )
+  ) {
+    throw new Error("list_contacts did not return the routing description");
   }
 
   const clientMessageId = randomUUID();
@@ -232,6 +245,7 @@ try {
   console.log(JSON.stringify({
     status: "pass",
     tools: actualTools.length,
+    contactDescription: true,
     authCases: 5,
     delivered: true,
     directConversationReused: true,

@@ -77,7 +77,9 @@ export function MessagePane({
         <div>
           <h2>{title(conversation, directTarget, currentPrincipalId)}</h2>
           <p>
-            {directTarget ? `@${directTarget.handle}` : conversation?.members.map((member) => `@${member.handle}`).join(" · ")}
+            {directTarget
+              ? [`@${directTarget.handle}`, directTarget.description].filter(Boolean).join(" · ")
+              : conversation?.members.map((member) => `@${member.handle}`).join(" · ")}
           </p>
         </div>
         {conversation?.kind === "group" ? <button className="quiet-button" onClick={onEditGroup}>그룹 관리</button> : null}

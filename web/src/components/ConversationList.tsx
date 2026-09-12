@@ -45,7 +45,12 @@ export function ConversationList({
 
       <div className="contact-strip" aria-label="새 1:1 대화">
         {contacts.map((contact) => (
-          <button key={contact.id} className="contact-chip" onClick={() => onDirect(contact)}>
+          <button
+            key={contact.id}
+            className="contact-chip"
+            onClick={() => onDirect(contact)}
+            title={contact.description || `@${contact.handle}`}
+          >
             <span className={`avatar ${contact.kind}`}>{contact.displayName.slice(0, 1)}</span>
             <span>@{contact.handle}</span>
           </button>

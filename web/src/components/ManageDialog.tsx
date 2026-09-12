@@ -8,7 +8,8 @@ interface ManageDialogProps {
   editingGroup: Conversation | null;
   onClose: () => void;
   onRefreshAgents: () => Promise<void>;
-  onCreateAgent: (input: { handle: string; displayName: string; expiresInDays: number | null }) => Promise<string>;
+  onCreateAgent: (input: { handle: string; displayName: string; description: string; expiresInDays: number | null }) => Promise<string>;
+  onUpdateAgent: (agentId: string, input: { displayName?: string; description?: string }) => Promise<void>;
   onIssueToken: (agentId: string, expiresInDays: number | null) => Promise<string>;
   onRevoke: (credentialId: string) => Promise<void>;
   onToggleAgent: (agent: Agent) => Promise<void>;
@@ -37,6 +38,53 @@ function TokenReveal({ token, onClose }: { token: string; onClose: () => void })
   );
 }
 
+function AgentEditor({
+  agent,
+  disabled,
+  onSave,
+}: {
+  agent: Agent;
+  disabled: boolean;
+  onSave: (input: { displayName: string; description: string }) => Promise<void>;
+}) {
+  const [name, setName] = useState(agent.displayName);
+  const [description, setDescription] = useState(agent.description);
+
+  useEffect(() => {
+    setName(agent.displayName);
+    setDescription(agent.description);
+  }, [agent.description, agent.displayName]);
+
+  const unchanged = name.trim() === agent.displayName && description.trim() === agent.description;
+
+  return (
+    <form
+      className="agent-editor"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void onSave({ displayName: name, description });
+      }}
+    >
+      <label>
+        표시 이름
+        <input value={name} onChange={(event) => setName(event.target.value)} required maxLength={100} />
+      </label>
+      <label>
+        역할 설명
+        <textarea
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="담당 업무와 이 에이전트에게 메시지를 보내야 하는 상황"
+          rows={3}
+          maxLength={500}
+        />
+        <small>{description.length}/500</small>
+      </label>
+      <button className="quiet-button" type="submit" disabled={disabled || unchanged}>설명 저장</button>
+    </form>
+  );
+}
+
 export function ManageDialog({
   open,
   agents,
@@ -45,6 +93,7 @@ export function ManageDialog({
   onClose,
   onRefreshAgents,
   onCreateAgent,
+  onUpdateAgent,
   onIssueToken,
   onRevoke,
   onToggleAgent,
@@ -53,6 +102,7 @@ export function ManageDialog({
   const [tab, setTab] = useState<"agents" | "groups">("agents");
   const [handle, setHandle] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [description, setDescription] = useState("");
   const [expiry, setExpiry] = useState("90");
   const [groupName, setGroupName] = useState("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
@@ -84,13 +134,27 @@ export function ManageDialog({
       const rawToken = await onCreateAgent({
         handle,
         displayName,
+        description,
         expiresInDays: expiry ? Number(expiry) : null,
       });
       setToken(rawToken);
       setHandle("");
       setDisplayName("");
+      setDescription("");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "에이전트를 만들지 못했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function updateAgent(agentId: string, input: { displayName: string; description: string }) {
+    setBusy(true);
+    setError(null);
+    try {
+      await onUpdateAgent(agentId, input);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "에이전트 설명을 저장하지 못했습니다.");
     } finally {
       setBusy(false);
     }
@@ -139,6 +203,17 @@ export function ManageDialog({
                 <label>표시 이름<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Research Agent" required /></label>
                 <label>토큰 만료<select value={expiry} onChange={(event) => setExpiry(event.target.value)}><option value="30">30일</option><option value="90">90일</option><option value="365">1년</option><option value="">없음</option></select></label>
               </div>
+              <label>
+                역할 설명
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="담당 업무와 이 에이전트에게 메시지를 보내야 하는 상황"
+                  rows={3}
+                  maxLength={500}
+                />
+                <small>{description.length}/500</small>
+              </label>
               <button className="primary-button" type="submit" disabled={busy}>에이전트와 토큰 생성</button>
             </form>
             <div className="agent-list">
@@ -149,6 +224,7 @@ export function ManageDialog({
                     <button className="quiet-button" onClick={async () => setToken(await onIssueToken(agent.id, 90))}>토큰 추가</button>
                     <button className="quiet-button" onClick={() => void onToggleAgent(agent)}>{agent.isActive ? "중지" : "활성화"}</button>
                   </div>
+                  <AgentEditor agent={agent} disabled={busy} onSave={(input) => updateAgent(agent.id, input)} />
                   <div className="credential-list">
                     {agent.credentials.map((credential) => (
                       <div key={credential.id}>
@@ -175,7 +251,11 @@ export function ManageDialog({
                     onChange={(event) => setMemberIds((current) => event.target.checked ? [...current, contact.id] : current.filter((id) => id !== contact.id))}
                   />
                   <span className={`avatar ${contact.kind}`}>{contact.displayName.slice(0, 1)}</span>
-                  <span>{contact.displayName}<small>@{contact.handle}</small></span>
+                  <span>
+                    {contact.displayName}
+                    <small>@{contact.handle}</small>
+                    {contact.description ? <small className="contact-description">{contact.description}</small> : null}
+                  </span>
                 </label>
               ))}
             </fieldset>

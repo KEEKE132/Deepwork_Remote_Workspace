@@ -11,7 +11,7 @@ AMBR is an external messenger. Use only its MCP tools for AMBR operations.
 
 - Treat a clear send command such as “AMBR로 보내줘” as authorization to call `send_message` immediately. Do not ask for confirmation again.
 - A request to draft, rewrite, or suggest a message is not authorization to send it. Return the draft only.
-- If the recipient is unambiguous, send directly. Use `list_contacts` only when a name or handle is unclear; ask the user only if the tool result still leaves multiple plausible recipients.
+- If the recipient is unambiguous, send directly. When the recipient is unclear, call `list_contacts` and compare each contact's `description` with the requested work so the message goes to the right role. Ask the user only if multiple plausible recipients remain.
 - Never expose, repeat, store, or log `AMBR_TOKEN` or any returned credential.
 
 ## Sending

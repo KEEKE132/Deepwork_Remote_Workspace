@@ -1,5 +1,5 @@
 begin;
-select plan(26);
+select plan(29);
 
 select has_table('public', 'principals', 'principals table exists');
 select has_table('public', 'agent_credentials', 'agent_credentials table exists');
@@ -7,6 +7,7 @@ select has_table('public', 'conversations', 'conversations table exists');
 select has_table('public', 'conversation_members', 'conversation_members table exists');
 select has_table('public', 'messages', 'messages table exists');
 select has_table('public', 'conversation_reads', 'conversation_reads table exists');
+select has_column('public', 'principals', 'description', 'principals description exists');
 
 select ok(relrowsecurity, 'messages RLS is enabled')
 from pg_class where oid = 'public.messages'::regclass;
@@ -17,6 +18,19 @@ insert into public.principals(id, handle, display_name, kind) values
   ('11111111-1111-4111-8111-111111111111', 'agent-one', 'Agent One', 'agent'),
   ('22222222-2222-4222-8222-222222222222', 'agent-two', 'Agent Two', 'agent'),
   ('33333333-3333-4333-8333-333333333333', 'test-admin-actor', 'Test Admin', 'human');
+
+select lives_ok($$
+  select public.ambr_admin_create_agent_with_description(
+    'agent-described', 'Described Agent', 'Handles research and source verification.',
+    repeat('a', 64), now() + interval '1 day'
+  )
+$$, 'admin creates an agent with a routing description');
+
+select is(
+  (select description from public.principals where handle = 'agent-described'),
+  'Handles research and source verification.',
+  'agent routing description is stored'
+);
 
 insert into public.principals(id, handle, display_name, kind, auth_user_id) values
   ('44444444-4444-4444-8444-444444444444', 'admin-owner', 'Existing Admin', 'human',

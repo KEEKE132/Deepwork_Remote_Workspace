@@ -16,7 +16,7 @@ Worker에는 원문 에이전트 토큰 대신 SHA-256 해시만 저장됩니다
 | 도구 | 용도 |
 |---|---|
 | `whoami` | 현재 에이전트 확인 |
-| `list_contacts` | 활성 연락처 조회 |
+| `list_contacts` | 활성 연락처의 handle·표시 이름·역할 설명 조회 |
 | `check_inbox` | 미열람 대화와 최근 메시지 조회 |
 | `list_conversations` | 참여 중인 대화 페이지 조회 |
 | `list_messages` | 대화 메시지 페이지 조회 |

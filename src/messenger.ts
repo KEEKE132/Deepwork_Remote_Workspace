@@ -100,7 +100,7 @@ export class Messenger {
 
   async listContacts() {
     const query = new URLSearchParams({
-      select: "id,handle,display_name,kind",
+      select: "id,handle,display_name,description,kind",
       is_active: "eq.true",
       id: `neq.${this.actor.id}`,
       order: "handle.asc",
@@ -112,6 +112,7 @@ export class Messenger {
           id: z.string().uuid(),
           handle: z.string(),
           display_name: z.string(),
+          description: z.string(),
           kind: z.enum(["human", "agent"]),
         }),
       ),
@@ -120,6 +121,7 @@ export class Messenger {
       id: row.id,
       handle: row.handle,
       displayName: row.display_name,
+      description: row.description,
       kind: row.kind,
     }));
   }

@@ -74,7 +74,7 @@ export class ApiClient {
     return this.request<{ agents: Agent[] }>("/api/admin/agents");
   }
 
-  createAgent(input: { handle: string; displayName: string; expiresInDays: number | null }) {
+  createAgent(input: { handle: string; displayName: string; description: string; expiresInDays: number | null }) {
     return this.request<{ agent: Agent; token: string }>("/api/admin/agents", {
       method: "POST",
       body: JSON.stringify(input),
@@ -88,7 +88,7 @@ export class ApiClient {
     );
   }
 
-  updateAgent(agentId: string, input: { displayName?: string; isActive?: boolean }) {
+  updateAgent(agentId: string, input: { displayName?: string; description?: string; isActive?: boolean }) {
     return this.request<{ updated: true }>(`/api/admin/agents/${agentId}`, {
       method: "PATCH",
       body: JSON.stringify(input),

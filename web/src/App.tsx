@@ -171,6 +171,7 @@ function Console({ client, session }: { client: SupabaseClient; session: Session
         onClose={() => { setManageOpen(false); setEditingGroup(null); }}
         onRefreshAgents={refreshAgents}
         onCreateAgent={async (input) => { const result = await api.createAgent(input); await Promise.all([refreshAgents(), refreshContacts()]); return result.token; }}
+        onUpdateAgent={async (agentId, input) => { await api.updateAgent(agentId, input); await Promise.all([refreshAgents(), refreshContacts()]); }}
         onIssueToken={async (agentId, days) => { const result = await api.issueToken(agentId, days); await refreshAgents(); return result.token; }}
         onRevoke={async (credentialId) => { await api.revokeCredential(credentialId); await refreshAgents(); }}
         onToggleAgent={async (agent) => { await api.updateAgent(agent.id, { isActive: !agent.isActive }); await Promise.all([refreshAgents(), refreshContacts()]); }}

@@ -8,6 +8,7 @@ export interface Principal {
   id: string;
   handle: string;
   displayName: string;
+  description?: string;
   kind: "human" | "agent";
 }
 
@@ -55,7 +56,8 @@ export interface Credential {
   createdAt: string;
 }
 
-export interface Agent extends Omit<Principal, "kind"> {
+export interface Agent extends Omit<Principal, "kind" | "description"> {
+  description: string;
   isActive: boolean;
   createdAt: string;
   credentials: Credential[];

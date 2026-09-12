@@ -121,8 +121,9 @@ h1, h2, h3 { font-family: "Manrope", sans-serif; margin: 0; letter-spacing: -0.0
 .login-copy { margin: 10px 0 30px; color: var(--muted); line-height: 1.5; }
 .login-form { display: grid; gap: 16px; }
 .login-form label, .compact-form label { display: grid; gap: 7px; color: #5b554c; font-size: 12px; font-weight: 700; }
-.login-form input, .compact-form input, .compact-form select { width: 100%; padding: 12px 13px; border: 1px solid var(--line); border-radius: 11px; outline: 0; background: #fff; }
-.login-form input:focus, .compact-form input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(232,165,58,.16); }
+.login-form input, .compact-form input, .compact-form select, .compact-form textarea, .agent-editor input, .agent-editor textarea { width: 100%; padding: 12px 13px; border: 1px solid var(--line); border-radius: 11px; outline: 0; background: #fff; }
+.compact-form textarea, .agent-editor textarea { resize: vertical; line-height: 1.45; }
+.login-form input:focus, .compact-form input:focus, .compact-form textarea:focus, .agent-editor input:focus, .agent-editor textarea:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(232,165,58,.16); }
 .form-error { padding: 10px 12px; border-radius: 9px; color: #8c2c20; background: #f9e4df; font-size: 12px; }
 .loading-screen { align-content: center; gap: 18px; color: var(--muted); }
 .loading-mark { width: 54px; height: 54px; border-radius: 18px; font-size: 23px; animation: breathe 1.5s ease-in-out infinite; }
@@ -147,6 +148,11 @@ h1, h2, h3 { font-family: "Manrope", sans-serif; margin: 0; letter-spacing: -0.0
 .agent-title strong, .agent-title small { display: block; }
 .agent-title small { margin-top: 2px; color: var(--muted); font-size: 11px; }
 .agent-actions { justify-content: flex-end; margin-top: -36px; }
+.agent-editor { display: grid; grid-template-columns: minmax(160px, .7fr) minmax(240px, 1.3fr) auto; align-items: end; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.agent-editor label { display: grid; gap: 6px; color: #5b554c; font-size: 11px; font-weight: 700; }
+.agent-editor label small, .compact-form label > small { justify-self: end; color: var(--muted); font-size: 10px; font-weight: 500; }
+.agent-editor textarea { min-height: 72px; }
+.contact-description { max-width: 480px; margin-top: 3px; color: #8d8478 !important; line-height: 1.35; }
 .credential-list { display: grid; gap: 5px; margin-top: 14px; padding-top: 10px; border-top: 1px solid #eee9df; }
 .credential-list > div { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
 .member-picker { display: grid; max-height: 330px; gap: 7px; overflow-y: auto; padding: 13px; border: 1px solid var(--line); border-radius: 14px; }
@@ -185,4 +191,5 @@ h1, h2, h3 { font-family: "Manrope", sans-serif; margin: 0; letter-spacing: -0.0
   .login-card { padding: 28px; }
   .manage-dialog { max-height: 100vh; border-radius: 18px; }
   .agent-actions { margin: 12px 0 0; justify-content: flex-start; }
+  .agent-editor { grid-template-columns: 1fr; }
 }

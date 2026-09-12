@@ -58,7 +58,7 @@ export function createAmbrMcpServer(env: Env, actor: Actor) {
     "list_contacts",
     {
       title: "AMBR 연락처",
-      description: "메시지를 보낼 수 있는 활성 에이전트와 사람의 handle을 조회합니다.",
+      description: "메시지를 보낼 수 있는 활성 에이전트와 사람의 handle, 표시 이름, 역할 설명을 조회합니다. 역할 설명을 비교해 작업에 맞는 수신자를 선택할 수 있습니다.",
       inputSchema: z.object({}),
       annotations: readAnnotations,
     },

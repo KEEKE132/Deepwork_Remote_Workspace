@@ -16,6 +16,7 @@ import { Messenger } from "./messenger";
 const createAgentSchema = z.object({
   handle: handleSchema,
   displayName: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).default(""),
   expiresInDays: z.number().int().min(1).max(3650).nullable().default(90),
 });
 
@@ -31,6 +32,7 @@ const saveGroupSchema = z.object({
 
 const updateAgentSchema = z.object({
   displayName: z.string().trim().min(1).max(100).optional(),
+  description: z.string().trim().max(500).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -38,6 +40,7 @@ const agentResultSchema = z.object({
   id: z.string().uuid(),
   handle: z.string(),
   displayName: z.string(),
+  description: z.string(),
   credentialId: z.string().uuid(),
   expiresAt: z.string().datetime({ offset: true }).nullable(),
   createdAt: z.string().datetime({ offset: true }),
@@ -86,10 +89,11 @@ async function createAgent(data: DataApi, request: Request) {
   const input = createAgentSchema.parse(await readJson(request));
   const token = generateToken();
   const result = await data.rpc(
-    "ambr_admin_create_agent",
+    "ambr_admin_create_agent_with_description",
     {
       p_handle: input.handle,
       p_display_name: input.displayName,
+      p_description: input.description,
       p_token_hash: await sha256Hex(token),
       p_expires_at: expiryFromDays(input.expiresInDays),
     },
@@ -190,7 +194,7 @@ export async function handleAdminApi(request: Request, env: Env): Promise<Respon
     if (url.pathname === "/api/admin/agents" && request.method === "GET") {
       const query = new URLSearchParams({
         select:
-          "id,handle,display_name,is_active,created_at,agent_credentials(id,expires_at,revoked_at,last_seen_at,created_at)",
+          "id,handle,display_name,description,is_active,created_at,agent_credentials(id,expires_at,revoked_at,last_seen_at,created_at)",
         kind: "eq.agent",
         order: "handle.asc",
       });
@@ -201,6 +205,7 @@ export async function handleAdminApi(request: Request, env: Env): Promise<Respon
             id: z.string().uuid(),
             handle: z.string(),
             display_name: z.string(),
+            description: z.string(),
             is_active: z.boolean(),
             created_at: z.string().datetime({ offset: true }),
             agent_credentials: z.array(
@@ -220,6 +225,7 @@ export async function handleAdminApi(request: Request, env: Env): Promise<Respon
           id: agent.id,
           handle: agent.handle,
           displayName: agent.display_name,
+          description: agent.description,
           isActive: agent.is_active,
           createdAt: agent.created_at,
           credentials: agent.agent_credentials.map((credential) => ({
@@ -247,6 +253,7 @@ export async function handleAdminApi(request: Request, env: Env): Promise<Respon
         "PATCH",
         {
           ...(input.displayName === undefined ? {} : { display_name: input.displayName }),
+          ...(input.description === undefined ? {} : { description: input.description }),
           ...(input.isActive === undefined ? {} : { is_active: input.isActive }),
           updated_at: new Date().toISOString(),
         },
