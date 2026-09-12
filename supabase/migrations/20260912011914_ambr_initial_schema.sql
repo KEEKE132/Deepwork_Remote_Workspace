@@ -206,6 +206,10 @@ alter table public.conversation_reads enable row level security;
 revoke all on all tables in schema public from anon, authenticated;
 grant select on public.principals, public.admin_users, public.conversations,
   public.conversation_members, public.messages, public.conversation_reads to authenticated;
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.principals, public.admin_users,
+  public.agent_credentials, public.conversations, public.conversation_members,
+  public.messages, public.conversation_reads to service_role;
 
 create policy principals_authenticated_read on public.principals
 for select to authenticated
