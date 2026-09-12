@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import assert from "node:assert/strict";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
@@ -111,10 +112,13 @@ async function connectThroughBrowserOAuth(ambrToken) {
   const authorizationPage = await fetch(authorizeUrl);
   const pageHtml = await authorizationPage.text();
   const csrfToken = /name="csrf_token" value="([^"]+)"/u.exec(pageHtml)?.[1];
-  const cookie = authorizationPage.headers.get("set-cookie")?.split(";", 1)[0];
-  if (!csrfToken || !cookie || !pageHtml.includes("에이전트 토큰")) {
+  const setCookie = authorizationPage.headers.get("set-cookie");
+  const cookie = setCookie?.split(";", 1)[0];
+  if (!csrfToken || !cookie || !setCookie || !pageHtml.includes("에이전트 토큰")) {
     throw new Error("OAuth token-entry page did not load");
   }
+  assert.match(setCookie, /; Path=\//u);
+  assert.doesNotMatch(setCookie, /; Path=\/oauth\/authorize/u);
 
   const approvalResponse = await fetch(`${workerUrl}/oauth/authorize`, {
     method: "POST",

@@ -282,7 +282,9 @@ function securityHeaders(cookie?: string): Headers {
 }
 
 function csrfCookie(value: string, clear = false): string {
-  return `${TOKEN_PAGE_COOKIE}=${clear ? "" : value}; HttpOnly; Secure; SameSite=Lax; Path=/oauth/authorize; Max-Age=${clear ? 0 : 600}`;
+  // The __Host- prefix requires Secure, no Domain attribute, and Path=/.
+  // Browsers silently reject the cookie when any requirement is missing.
+  return `${TOKEN_PAGE_COOKIE}=${clear ? "" : value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${clear ? 0 : 600}`;
 }
 
 function cookieValue(request: Request, name: string): string | null {
